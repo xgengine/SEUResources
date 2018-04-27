@@ -2,12 +2,15 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+
 /// <summary>
 /// SEUResource 对Unity资源加载进行封装、保持和 Resources 资源加载接口形式，并对资源进行引用计数的管理
 /// </summary>
 public class SEUResource
 {
     protected Object m_Asset = null;
+
+    protected Request m_LoadAysncRequest;
 
     public Object asset
     {
@@ -75,15 +78,30 @@ public class SEUResource
         m_Pool = pool;
     }
 
-    internal virtual void UnloadResource()
+    protected virtual void UnloadResource()
     {
         Debug.Log(GetType()+" unload ");
    
     }
 
-    internal virtual void LoadAsset()
+    protected virtual void LoadAsset()
     {
 
+    }
+
+   
+    protected virtual IEnumerator LoadAssetAsync()
+    {
+        yield break;
+    }
+
+    protected Request SendLoadAsyncRequest()
+    {
+        if(m_LoadAysncRequest == null)
+        {
+            m_LoadAysncRequest = new Request(this);
+        }
+        return m_LoadAysncRequest;
     }
 
     protected void AddDependenceResources(SEUResource resource)
@@ -92,6 +110,20 @@ public class SEUResource
         {
             m_DependenceResources.Add(resource);
         }
+    }
+
+     
+    protected void LogResult()
+    {
+        if (m_Asset == null)
+        {
+            Debug.LogError("Load failed :" + m_LoadPath);
+        }
+        else
+        {
+            Debug.Log("Load Succeed :"+m_LoadPath );
+        }
+        
     }
 
     #region 对外接口
@@ -103,13 +135,11 @@ public class SEUResource
     static public SEUResource Load(string path)
     {
         SEUResource result = m_ResourcePool.Load(path);
-#if SEU_DEBUG
-        result.Debug_StackInfo.Add("[Load]"+StackTraceUtility.ExtractStackTrace());
-#endif
+
         return result;
     }
 
-    static public SEUResourceRequest LoadAsyn(string path)
+    static public Request LoadAsyn(string path)
     {
         return m_ResourcePool.LoadAsyn(path);
     }
@@ -146,6 +176,11 @@ public class SEUResource
     }
 
     public List<string> Debug_StackInfo=new List<string>();
+
+    public void Debug_MarkStackInfo()
+    {
+        Debug_StackInfo.Add("[Load]" + StackTraceUtility.ExtractStackTrace());
+    }
 #endif
 
 #endregion
@@ -439,15 +474,13 @@ public class SEUResource
                     Debug.LogError("Load failed :" + path);
                 }
             }
+            resource.Debug_MarkStackInfo();
             return resource;
         }
 
-        private SEUResourceRequest LoadAsynInternal(string path)
-        {
-            SEUResourceRequest request = new SEUResourceRequest();
-
+        private Request LoadAsynInternal(string path)
+        {        
             SEUResource resource = null;
-
             if (m_Resources.ContainsKey(path))
             {
                 resource = m_Resources[path];
@@ -465,18 +498,12 @@ public class SEUResource
                         break;
                 }
                 PushResource(path, resource); 
-                resource.LoadAsset();
-
-                if (resource.asset == null)
-                {
-                    Debug.LogError("Load failed :" + path);
-                }
             }
-            request
-            return request;
+            resource.Debug_MarkStackInfo();
+            return resource.SendLoadAsyncRequest();
         }
 
-        internal SEUResourceRequest LoadAsyn(string path)
+        internal Request LoadAsyn(string path)
         {
             SEUResourcePool pool = GetGroupPool(path);
             if (pool != null)
@@ -505,7 +532,26 @@ public class SEUResource
                     Debug.LogError("Load failed :" + path);
                 }
             }
+            resource.Debug_MarkStackInfo();
             return resource;
+        }
+
+        internal Request LoadAssetBundleAsyn(string path)
+        {
+            string bundlePath = m_ABPathBuilder.BundlePathHandle(path);
+            SEUResource resource = null;
+            if (m_AssetBundles.ContainsKey(bundlePath))
+            {
+                resource = m_AssetBundles[bundlePath];
+                resource.Use();
+            }
+            else
+            {
+                resource = new SEUABResource(bundlePath);
+                PushResource(bundlePath, resource); 
+            }
+            resource.Debug_MarkStackInfo();
+            return resource.SendLoadAsyncRequest();
         }
 
         internal SEUResource LoadBundleManifest(string path)
@@ -522,12 +568,30 @@ public class SEUResource
                 resource = new SEUMenifestBundleResource(manifestPath);
                 PushResource(manifestPath, resource);
                 resource.LoadAsset();
-                if (resource.asset == null)
-                {
-                    Debug.LogError("Load failed :" + path);
-                }
+              
             }
+            resource.Debug_MarkStackInfo();
             return resource;
+        }
+
+        internal Request LoadBundleManifestAsync(string path)
+        {
+            string manifestPath = m_ABPathBuilder.ManifestBundlePathHandle(path);
+            SEUResource resource = null;
+            if (m_Resources.ContainsKey(manifestPath))
+            {
+                resource = m_Resources[manifestPath];
+                resource.Use();
+            }
+            else
+            {
+                resource = new SEUMenifestBundleResource(manifestPath);
+                PushResource(manifestPath, resource);    
+            }
+#if  SEU_DEBUG
+            resource.Debug_MarkStackInfo();
+#endif
+            return resource.SendLoadAsyncRequest();
         }
 
         internal void ResisterGroupPath(string path, SEULoaderType loaderType,SEUResourceUnLoadType unLoadType, SEUABPathBuilder ABPathBuilder)
@@ -554,7 +618,6 @@ public class SEUResource
 
     }
 
-
     /// <summary>
     /// 采用资源从中 Resources 加载方式的资源类
     /// </summary>
@@ -562,14 +625,19 @@ public class SEUResource
     {
         public SEUNormalResource(string path) : base(path)
         {
-
         }
-        internal override void LoadAsset()
+        protected override void LoadAsset()
         {
             m_Asset = Resources.Load(m_LoadPath);
         }
+        protected override IEnumerator LoadAssetAsync()
+        {
+            ResourceRequest request = Resources.LoadAsync(m_LoadPath);
+            yield return request;
+            m_Asset = request.asset;
+        }
 
-        internal override void UnloadResource()
+        protected override void UnloadResource()
         {
             Debug.Log("Resource");
         }
@@ -584,18 +652,37 @@ public class SEUResource
         public SEUResourceLoadedFromBundle(string path) : base(path)
         {
         }
-        internal override void LoadAsset()
+        protected override void LoadAsset()
         {
             SEUResource bundleRes = m_Pool.LoadAssetBundle(m_LoadPath);
             AddDependenceResources(bundleRes);
             AssetBundle bundle = bundleRes.asset as AssetBundle;
             if (bundle != null)
             {
-                m_Asset = bundle.LoadAsset(System.IO.Path.GetFileName(m_LoadPath));
+                Object asset = bundle.LoadAsset(System.IO.Path.GetFileName(m_LoadPath));
+                if(m_Asset == null)
+                {
+                    m_Asset = asset;
+                }
             }
-            else
+        }
+
+        protected override IEnumerator LoadAssetAsync()
+        {
+            Request request = m_Pool.LoadAssetBundleAsyn(m_LoadPath);
+            yield return request;
+            SEUResource bundleRes = request.resource;
+            AddDependenceResources(bundleRes);
+
+            AssetBundle bundle = bundleRes.asset as AssetBundle;
+            if (bundle != null)
             {
-                Debug.LogError("Load Failed :" + m_LoadPath);
+                AssetBundleRequest bdRequest = bundle.LoadAssetAsync(System.IO.Path.GetFileName(m_LoadPath));
+                yield return bdRequest;
+                if(m_Asset == null)
+                {
+                    m_Asset = bdRequest.asset;
+                }
             }
         }
     }
@@ -609,7 +696,7 @@ public class SEUResource
         public SEUMenifestBundleResource(string path):base(path)
         {
         }
-        internal override void LoadAsset()
+        protected override void LoadAsset()
         {
             byte[] buffer = SEUFileLoader.ReadAllBytes(m_LoadPath);
             bundle = AssetBundle.LoadFromMemory(buffer);
@@ -617,8 +704,29 @@ public class SEUResource
             {
                 m_Asset = bundle.LoadAsset("assetbundlemanifest");
             }
+            LogResult();
         }
-        internal override void UnloadResource()
+        protected override IEnumerator LoadAssetAsync()
+        {
+            byte[] buffer = SEUFileLoader.ReadAllBytes(m_LoadPath);
+            AssetBundleCreateRequest  createReuest= AssetBundle.LoadFromMemoryAsync(buffer);
+            yield return createReuest;
+            if(bundle == null)
+            {
+                bundle = createReuest.assetBundle;
+            }
+            if (bundle != null)
+            {
+                AssetBundleRequest request = bundle.LoadAssetAsync("assetbundlemanifest");
+                yield return request;
+                if(m_Asset == null)
+                {
+                    m_Asset = request.asset;
+                }      
+            }
+            LogResult();
+        }
+        protected override void UnloadResource()
         {
             base.UnloadResource();
             if (bundle != null)
@@ -639,7 +747,7 @@ public class SEUResource
 
         }
 
-        internal override void LoadAsset()
+        protected override void LoadAsset()
         {
             SEUResource manifestRes = m_Pool.LoadBundleManifest(m_LoadPath);
             AddDependenceResources(manifestRes);
@@ -661,10 +769,55 @@ public class SEUResource
             } 
             ///加载AB包
             byte[] buffer = SEUFileLoader.ReadAllBytes(m_LoadPath);
-            m_Asset = AssetBundle.LoadFromMemory(buffer);
+            if(m_Asset == null)
+            {
+                m_Asset = AssetBundle.LoadFromMemory(buffer);
+            }
+            else
+            {
+                Debug.LogWarning("[异步冲突]");
+            }
+            LogResult();
+           
+        }
+        protected override IEnumerator LoadAssetAsync()
+        {
+            SEUResource manifestRes = m_Pool.LoadBundleManifest(m_LoadPath);
+            AddDependenceResources(manifestRes);
+            if (manifestRes != null && manifestRes.asset != null)
+            {
+                AssetBundleManifest manifest = manifestRes.asset as AssetBundleManifest;
+                if (manifest != null)
+                {
+                    string[] dependenciesPaths = manifest.GetAllDependencies(m_LoadPath);
+                    if (dependenciesPaths != null)
+                    {
+                        for (int i = 0; i < dependenciesPaths.Length; i++)
+                        {
+                            Request request = m_Pool.LoadAssetBundleAsyn(dependenciesPaths[i]);
+                            yield return request;
+                            SEUResource depRes = request.resource;
+                            AddDependenceResources(depRes);
+                        }
+                    }
+                }
+            }
+            ///加载AB包
+            byte[] buffer = SEUFileLoader.ReadAllBytes(m_LoadPath);
+            AssetBundleCreateRequest createRequest  = AssetBundle.LoadFromMemoryAsync(buffer);
+            yield return createRequest;
+            if(m_Asset == null)//做一下判断 防止和同步冲突
+            {
+                m_Asset = createRequest.assetBundle;
+            }
+            else
+            {
+                Debug.LogWarning("[同步冲突]");
+            }
+            LogResult();
         }
 
-        internal override void UnloadResource()
+        protected override void UnloadResource()
         {
             base.UnloadResource();
             AssetBundle bundle = m_Asset as AssetBundle;
@@ -675,22 +828,39 @@ public class SEUResource
         }
     }
 
-}
-public class SEUResourceRequest
-{
-    private SEUResource m_Resource;
-
-    public SEUResource resource
+    public class Request : CustomYieldInstruction
     {
-        get
+        private SEUResource m_Resource;
+
+        public SEUResource resource
         {
-            return m_Resource;
+            get
+            {
+                return m_Resource;
+            }
         }
-    }
-    internal void AttachSEUResource(SEUResource resource)
-    {
+        internal Request(SEUResource resource)
+        {
+            m_Resource = resource;
+            SEUResourceRequestRunner.SendReqest(MainLoop());
+        }
+        IEnumerator MainLoop()
+        {
+            yield return resource.LoadAssetAsync();
+            m_KepWaiting = false;
+        }
+        private bool m_KepWaiting = true;
+
+        public override bool keepWaiting
+        {
+            get
+            {
+                return m_KepWaiting;
+            }
+        }
 
     }
+
 }
 
 public enum SEULoaderType

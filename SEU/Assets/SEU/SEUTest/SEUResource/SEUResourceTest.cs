@@ -16,11 +16,22 @@ public class SEUResourceTest : MonoBehaviour {
     }
 
     SEUResource resource;
-    void Start () {
-        
+    IEnumerator Start () {
+
+        //SEUResource.Request requst = SEUResource.LoadAsyn("a/cube");
+        //yield return requst;
+
+        //Instantiate(requst.resource.asset);
+
         //assetbundle test
         SEUResource.ResisterGroupPath("a", SEULoaderType.AB,SEUResourceUnLoadType.REFCOUNT_ZERO, new testABPathBuilder());
-   
+
+
+        //SEUResource.Request requst = SEUResource.LoadAsyn("a/cube");
+        //yield return requst;
+        //Instantiate(requst.resource.asset);
+        yield return null;
+     
     }
     int loadCount = 0;
     int unloadCount = 0;
@@ -36,13 +47,28 @@ public class SEUResourceTest : MonoBehaviour {
             obj.transform.position =p;
             
         }
+        if(GUILayout.Button("Load cube async"))
+        {
+            StartCoroutine(RUN());
+        }
+
         GUILayout.Label(loadCount.ToString());
         if(GUILayout.Button("unload cube"))
         {
             unloadCount++;
             SEUResource.UnLoadUsedResource(resource);
         }
+     
         GUILayout.Label(unloadCount.ToString());
+    }
+
+    IEnumerator RUN()
+    {
+        loadCount++;
+        SEUResource.Request requst = SEUResource.LoadAsyn("a/cube");
+        yield return requst;
+        resource = requst.resource;
+        Instantiate(requst.resource.asset);
     }
     void Update () {
 
