@@ -56,7 +56,7 @@ public class SEUResourceTest : MonoBehaviour {
         if(GUILayout.Button("unload cube"))
         {
             unloadCount++;
-            SEUResource.UnLoadUsedResource(resource);
+            SEUResource.UnLoadResource(resource);
         }
      
         GUILayout.Label(unloadCount.ToString());
@@ -66,6 +66,7 @@ public class SEUResourceTest : MonoBehaviour {
     {
         loadCount++;
         SEUResource.Request requst = SEUResource.LoadAsyn("a/cube");
+        var rr = SEUResource.Load("a/cube");
         yield return requst;
         resource = requst.resource;
         Instantiate(requst.resource.asset);

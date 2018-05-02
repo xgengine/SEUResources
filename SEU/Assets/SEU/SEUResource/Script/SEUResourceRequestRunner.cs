@@ -29,4 +29,5 @@ public class SEUResourceRequestRunner : MonoBehaviour {
     {
         _destory = true;
     }
+
 }
