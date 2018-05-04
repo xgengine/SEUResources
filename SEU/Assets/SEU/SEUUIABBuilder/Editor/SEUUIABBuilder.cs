@@ -5,6 +5,6 @@ public class UIABBuilder {
     [MenuItem("SEU/Build UI Assetbundle")]
 	static void Build()
     {
-        BuildPipeline.BuildAssetBundles(Application.dataPath + "/Bundles/test_group",BuildAssetBundleOptions.ChunkBasedCompression ,BuildTarget.StandaloneWindows64);
+        BuildPipeline.BuildAssetBundles(Application.dataPath + "/Bundles/test_group",BuildAssetBundleOptions.UncompressedAssetBundle,BuildTarget.StandaloneWindows64);
     }
 }

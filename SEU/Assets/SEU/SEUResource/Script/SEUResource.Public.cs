@@ -1,4 +1,4 @@
-﻿#define SEU_DEBUG
+﻿//#define SEU_DEBUG
 using UnityEngine;
 using System.Collections;
 public partial class SEUResource{
@@ -9,15 +9,6 @@ public partial class SEUResource{
             return m_Asset;
         }
     }
-
-    public string loadPath
-    {
-        get
-        {
-            return m_LoadPath;
-        }
-    }
-
     static public void ResisterGroupPath(string path, SEULoaderType loaderType, SEUResourceUnLoadType unLoadType, SEUABPathBuilder ABPathBuilder = null)
     {
         m_ResourcePool.ResisterGroupPath(path, loaderType, unLoadType, ABPathBuilder);

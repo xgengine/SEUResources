@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#define SEU_DEITOR
+using UnityEngine;
 using UnityEditor;
 using System.Collections;
 [CustomEditor(typeof(SEUResourceDebug))]

@@ -7,7 +7,8 @@ public class SEUResourceTest : MonoBehaviour {
     {
         public override string BundlePathHandle(string path)
         {
-            return path;
+
+            return path.Replace("1","");
         }
         public override string ManifestBundlePathHandle(string path)
         {
@@ -15,8 +16,8 @@ public class SEUResourceTest : MonoBehaviour {
         }
     }
 
-    SEUResource resource;
-    IEnumerator Start () {
+   // SEUResource resource;
+    void Start () {
 
         //SEUResource.Request requst = SEUResource.LoadAsyn("a/cube");
         //yield return requst;
@@ -30,8 +31,35 @@ public class SEUResourceTest : MonoBehaviour {
         //SEUResource.Request requst = SEUResource.LoadAsyn("a/cube");
         //yield return requst;
         //Instantiate(requst.resource.asset);
-        yield return null;
-     
+
+        //for(int i = 0; i < 11;i++)
+        //{
+
+        //    StartCoroutine(RUN());
+        //    var resource = SEUResource.Load("a/cube");
+        //    GameObject obj = Instantiate(resource.asset) as GameObject;
+        //    SEUResource.UnLoadResource(resource);
+        //}
+
+        var resource1 = SEUResource.Load("a/cube");
+        var resource2 = SEUResource.Load("a/cube1");
+        GameObject obj1 = Instantiate(resource1.asset) as GameObject;
+
+        GameObject obj2 = Instantiate(resource2.asset) as GameObject;
+
+        var resource3 = SEUResource.Load("a/roll");
+        GameObject obj3 = Instantiate(resource3.asset) as GameObject;
+
+       
+
+        var resource4 = SEUResource.Load("a/sphere");
+        GameObject obj4 = Instantiate(resource4.asset) as GameObject;
+
+        //SEUResource.UnLoadResource(resource1);
+        //SEUResource.UnLoadResource(resource2);
+        //SEUResource.UnLoadResource(resource3);
+        //SEUResource.UnLoadResource(resource4);
+
     }
     int loadCount = 0;
     int unloadCount = 0;
@@ -41,7 +69,7 @@ public class SEUResourceTest : MonoBehaviour {
         if (GUILayout.Button("Load cube"))
         {
             loadCount++;
-            resource = SEUResource.Load("a/cube");
+            var resource = SEUResource.Load("a/cube");
             GameObject obj = Instantiate(resource.asset) as GameObject;
             p += Vector3.right;
             obj.transform.position =p;
@@ -55,8 +83,8 @@ public class SEUResourceTest : MonoBehaviour {
         GUILayout.Label(loadCount.ToString());
         if(GUILayout.Button("unload cube"))
         {
-            unloadCount++;
-            SEUResource.UnLoadResource(resource);
+        
+            
         }
      
         GUILayout.Label(unloadCount.ToString());
@@ -65,11 +93,19 @@ public class SEUResourceTest : MonoBehaviour {
     IEnumerator RUN()
     {
         loadCount++;
+        int a = loadCount;
+        Debug.Log("vvvvvvvvvvvvvvvvvvvvvvvvvv" +a.ToString());
+    
         SEUResource.Request requst = SEUResource.LoadAsyn("a/cube");
-        var rr = SEUResource.Load("a/cube");
         yield return requst;
-        resource = requst.resource;
-        Instantiate(requst.resource.asset);
+
+
+        var resource = requst.resource;
+        GameObject obj = Instantiate(requst.resource.asset) as GameObject;
+        obj.name = "xxx";
+        SEUResource.UnLoadResource(resource);
+
+        Debug.Log("cccccccccccccccccccccccccccccc" + a.ToString());
     }
     void Update () {
 

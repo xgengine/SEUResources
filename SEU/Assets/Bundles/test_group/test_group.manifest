@@ -1,7 +1,20 @@
 ManifestFileVersion: 0
-CRC: 2662731158
+CRC: 2426496825
 AssetBundleManifest:
   AssetBundleInfos:
     Info_0:
       Name: a/cube
+      Dependencies:
+        Dependency_0: a/common
+    Info_1:
+      Name: a/roll
+      Dependencies:
+        Dependency_0: a/common
+    Info_2:
+      Name: a/sphere
+      Dependencies:
+        Dependency_0: a/roll
+        Dependency_1: a/common
+    Info_3:
+      Name: a/common
       Dependencies: {}

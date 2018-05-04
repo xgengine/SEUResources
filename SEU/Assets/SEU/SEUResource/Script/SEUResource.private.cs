@@ -1,4 +1,4 @@
-﻿#define SEU_DEBUG
+﻿//#define SEU_DEBUG
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,6 +11,13 @@ public partial class SEUResource
     protected Object m_Asset = null;
 
     protected string m_LoadPath;
+    public string loadPath
+    {
+        get
+        {
+            return m_LoadPath;
+        }
+    }
 
     protected Request m_LoadAysncRequest;
 
@@ -28,10 +35,7 @@ public partial class SEUResource
     private void Use()
     {
         m_RefCount++;
-        for (int i = 0; i < m_DependenceResources.Count; i++)
-        {
-            m_DependenceResources[i].Use();
-        }
+      
     }
 
     private void UnUsed()
@@ -43,14 +47,13 @@ public partial class SEUResource
         else
         {
             m_RefCount--;
-
-            for (int i = 0; i < m_DependenceResources.Count; i++)
-            {
-                m_DependenceResources[i].UnUsed();
-            }
             if (m_RefCount == 0)
             {
                 m_Pool.PopResource(this);
+                for (int i = 0; i < m_DependenceResources.Count; i++)
+                {
+                    SEUResource.UnLoadResource(m_DependenceResources[i]);
+                }
             }
         }
        
@@ -61,7 +64,7 @@ public partial class SEUResource
         m_Pool = pool;
     }
 
-    protected virtual void UnloadResource()
+    protected virtual void ReleaseResource()
     {
         Debug.Log(GetType()+" unload ");
    
@@ -100,16 +103,16 @@ public partial class SEUResource
     {
         if (m_Asset == null)
         {
-            Debug.LogError("Load failed :" + m_LoadPath);
+            Debug.LogError(GetType()+" Load failed :" + m_LoadPath);
         }
         else
         {
-            Debug.Log("Load Succeed :"+m_LoadPath );
+            Debug.Log(GetType()+ " Load Succeed :"+m_LoadPath );
         }
         
     }
 
-#if SEU_DEBUG
+#if SEU_DEBUG||UNITY_EDITOR
     public int refCount
     {
         get
@@ -321,7 +324,6 @@ public partial class SEUResource
             }
             if (!container.ContainsKey(path))
             {
-                resource.Use();
                 container.Add(path, resource);
                 resource.AttachPool(this);
 #if SEU_DEBUG
@@ -359,9 +361,9 @@ public partial class SEUResource
             if (container.ContainsKey(path))
             {
                 if(m_UnloadType == SEUResourceUnLoadType.REFCOUNT_ZERO)
-                {
-                    resource.UnloadResource();
+                {                   
                     container.Remove(path);
+                    resource.ReleaseResource();
 #if SEU_DEBUG
                     GameObject.Destroy(resource.DebugObject);
 #endif
@@ -408,7 +410,6 @@ public partial class SEUResource
             if (m_Resources.ContainsKey(path))
             {
                 resource = m_Resources[path];
-                resource.Use();
             }
             else
             {
@@ -421,15 +422,17 @@ public partial class SEUResource
                         resource = new SEUResourceLoadedFromBundle(path);
                         break;
                 }
-                PushResource(path, resource); ;
-                resource.LoadAsset();
-
-                if (resource.asset == null)
-                {
-                    Debug.LogError("Load failed :" + path);
-                }
+                PushResource(path, resource);
+               
             }
+            if(resource.asset == null)
+            {
+                resource.LoadAsset();
+            }
+            resource.Use();
+#if SEU_EDITOR
             resource.Debug_MarkStackInfo();
+#endif
             return resource;
         }
 
@@ -438,8 +441,7 @@ public partial class SEUResource
             SEUResource resource = null;
             if (m_Resources.ContainsKey(path))
             {
-                resource = m_Resources[path];
-                resource.Use();
+                resource = m_Resources[path];           
             }
             else
             {
@@ -454,7 +456,10 @@ public partial class SEUResource
                 }
                 PushResource(path, resource); 
             }
+            resource.Use();
+#if SEU_DEBUG
             resource.Debug_MarkStackInfo();
+#endif
             return resource.SendLoadAsyncRequest();
         }
 
@@ -475,19 +480,25 @@ public partial class SEUResource
             if (m_AssetBundles.ContainsKey(bundlePath))
             {
                 resource = m_AssetBundles[bundlePath];
-                resource.Use();
+                if (resource.asset == null)
+                {
+                    resource.LoadAsset();
+                }
+                else
+                {
+                    resource.Use();
+                }
             }
             else
             {
                 resource = new SEUABResource(bundlePath);
                 PushResource(bundlePath, resource);
+                resource.Use();
                 resource.LoadAsset();
-                if (resource.asset == null)
-                {
-                    Debug.LogError("Load failed :" + path);
-                }
             }
+#if SEU_EDITOR
             resource.Debug_MarkStackInfo();
+#endif
             return resource;
         }
 
@@ -497,15 +508,17 @@ public partial class SEUResource
             SEUResource resource = null;
             if (m_AssetBundles.ContainsKey(bundlePath))
             {
-                resource = m_AssetBundles[bundlePath];
-                resource.Use();
+                resource = m_AssetBundles[bundlePath]; 
             }
             else
             {
                 resource = new SEUABResource(bundlePath);
                 PushResource(bundlePath, resource); 
             }
+            resource.Use();
+#if SEU_EDITOR
             resource.Debug_MarkStackInfo();
+#endif
             return resource.SendLoadAsyncRequest();
         }
 
@@ -516,34 +529,47 @@ public partial class SEUResource
             if (m_Resources.ContainsKey(manifestPath))
             {
                 resource = m_Resources[manifestPath];
-                resource.Use();
+                if (resource.asset == null)
+                {
+                    resource.LoadAsset();
+
+                }
+                else
+                {
+                    resource.Use();
+                }
             }
             else
             {
                 resource = new SEUMenifestBundleResource(manifestPath);
                 PushResource(manifestPath, resource);
+                resource.Use();
                 resource.LoadAsset();
-              
             }
+#if SEU_DEBUG
             resource.Debug_MarkStackInfo();
+#endif
             return resource;
         }
 
         internal Request LoadBundleManifestAsync(string path)
         {
+
             string manifestPath = m_ABPathBuilder.ManifestBundlePathHandle(path);
             SEUResource resource = null;
             if (m_Resources.ContainsKey(manifestPath))
             {
                 resource = m_Resources[manifestPath];
-                resource.Use();
+               
             }
             else
             {
                 resource = new SEUMenifestBundleResource(manifestPath);
                 PushResource(manifestPath, resource);    
             }
-#if  SEU_DEBUG
+
+            resource.Use();
+#if SEU_DEBUG
             resource.Debug_MarkStackInfo();
 #endif
             return resource.SendLoadAsyncRequest();
@@ -591,12 +617,6 @@ public partial class SEUResource
             yield return request;
             m_Asset = request.asset;
         }
-
-        protected override void UnloadResource()
-        {
-            Debug.Log("Resource");
-        }
-
     }
 
     /// <summary>
@@ -620,6 +640,7 @@ public partial class SEUResource
                     m_Asset = asset;
                 }
             }
+            LogResult();
         }
 
         protected override IEnumerator LoadAssetAsync()
@@ -635,10 +656,11 @@ public partial class SEUResource
                 AssetBundleRequest bdRequest = bundle.LoadAssetAsync(System.IO.Path.GetFileName(m_LoadPath));
                 yield return bdRequest;
                 if(m_Asset == null)
-                {
+                {                    
                     m_Asset = bdRequest.asset;
                 }
             }
+            LogResult();
         }
     }
 
@@ -681,9 +703,9 @@ public partial class SEUResource
             }
             LogResult();
         }
-        protected override void UnloadResource()
+        protected override void ReleaseResource()
         {
-            base.UnloadResource();
+            base.ReleaseResource();
             if (bundle != null)
             {
                 bundle.Unload(true);
@@ -726,6 +748,8 @@ public partial class SEUResource
             byte[] buffer = SEUFileLoader.ReadAllBytes(m_LoadPath);
             if(m_Asset == null)
             {
+                //string path = Application.dataPath + "/Bundles/test_group/" + m_LoadPath;
+                //m_Asset = AssetBundle.LoadFromFile(path);
                 m_Asset = AssetBundle.LoadFromMemory(buffer);
             }
             else
@@ -772,9 +796,9 @@ public partial class SEUResource
             LogResult();
         }
 
-        protected override void UnloadResource()
+        protected override void ReleaseResource()
         {
-            base.UnloadResource();
+            base.ReleaseResource();
             AssetBundle bundle = m_Asset as AssetBundle;
             if (bundle != null)
             {
