@@ -1,4 +1,4 @@
-﻿//#define SEU_DEBUG
+﻿#define SEU_DEBUG
 using UnityEngine;
 using System.Collections;
 public partial class SEUResource{

@@ -40,7 +40,14 @@ public class SEUResourceTest : MonoBehaviour {
         //    GameObject obj = Instantiate(resource.asset) as GameObject;
         //    SEUResource.UnLoadResource(resource);
         //}
+        StartCoroutine(RUN("a/cube"));
+        StartCoroutine(RUN("a/cube1"));
+        for (int i = 0; i < 5; i++)
+        {
+            StartCoroutine(RUN("a/roll"));
+        }
 
+        StartCoroutine(RUN("a/sphere"));
         var resource1 = SEUResource.Load("a/cube");
         var resource2 = SEUResource.Load("a/cube1");
         GameObject obj1 = Instantiate(resource1.asset) as GameObject;
@@ -50,7 +57,7 @@ public class SEUResourceTest : MonoBehaviour {
         var resource3 = SEUResource.Load("a/roll");
         GameObject obj3 = Instantiate(resource3.asset) as GameObject;
 
-       
+
 
         var resource4 = SEUResource.Load("a/sphere");
         GameObject obj4 = Instantiate(resource4.asset) as GameObject;
@@ -77,7 +84,7 @@ public class SEUResourceTest : MonoBehaviour {
         }
         if(GUILayout.Button("Load cube async"))
         {
-            StartCoroutine(RUN());
+            StartCoroutine(RUN("a/cube"));
         }
 
         GUILayout.Label(loadCount.ToString());
@@ -90,22 +97,13 @@ public class SEUResourceTest : MonoBehaviour {
         GUILayout.Label(unloadCount.ToString());
     }
 
-    IEnumerator RUN()
-    {
-        loadCount++;
-        int a = loadCount;
-        Debug.Log("vvvvvvvvvvvvvvvvvvvvvvvvvv" +a.ToString());
-    
-        SEUResource.Request requst = SEUResource.LoadAsyn("a/cube");
+    IEnumerator RUN(string path)
+    { 
+        SEUResource.Request requst = SEUResource.LoadAsyn(path);
         yield return requst;
-
-
         var resource = requst.resource;
         GameObject obj = Instantiate(requst.resource.asset) as GameObject;
-        obj.name = "xxx";
-        SEUResource.UnLoadResource(resource);
-
-        Debug.Log("cccccccccccccccccccccccccccccc" + a.ToString());
+       // SEUResource.UnLoadResource(resource);
     }
     void Update () {
 

@@ -1,4 +1,4 @@
-﻿//#define SEU_DEBUG
+﻿#define SEU_DEBUG
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -95,6 +95,10 @@ public partial class SEUResource
         if(m_DependenceResources.Contains(resource) == false)
         {
             m_DependenceResources.Add(resource);
+            resource.Use();
+#if SEU_DEBUG
+            resource.Debug_MarkStackInfo();
+#endif
         }
     }
 
@@ -430,7 +434,7 @@ public partial class SEUResource
                 resource.LoadAsset();
             }
             resource.Use();
-#if SEU_EDITOR
+#if SEU_DEBUG
             resource.Debug_MarkStackInfo();
 #endif
             return resource;
@@ -480,25 +484,19 @@ public partial class SEUResource
             if (m_AssetBundles.ContainsKey(bundlePath))
             {
                 resource = m_AssetBundles[bundlePath];
+                /// 这样处理 为了同步和异步并存
                 if (resource.asset == null)
                 {
                     resource.LoadAsset();
-                }
-                else
-                {
-                    resource.Use();
                 }
             }
             else
             {
                 resource = new SEUABResource(bundlePath);
                 PushResource(bundlePath, resource);
-                resource.Use();
                 resource.LoadAsset();
             }
-#if SEU_EDITOR
-            resource.Debug_MarkStackInfo();
-#endif
+
             return resource;
         }
 
@@ -515,10 +513,6 @@ public partial class SEUResource
                 resource = new SEUABResource(bundlePath);
                 PushResource(bundlePath, resource); 
             }
-            resource.Use();
-#if SEU_EDITOR
-            resource.Debug_MarkStackInfo();
-#endif
             return resource.SendLoadAsyncRequest();
         }
 
@@ -532,23 +526,14 @@ public partial class SEUResource
                 if (resource.asset == null)
                 {
                     resource.LoadAsset();
-
-                }
-                else
-                {
-                    resource.Use();
                 }
             }
             else
             {
                 resource = new SEUMenifestBundleResource(manifestPath);
                 PushResource(manifestPath, resource);
-                resource.Use();
                 resource.LoadAsset();
             }
-#if SEU_DEBUG
-            resource.Debug_MarkStackInfo();
-#endif
             return resource;
         }
 
@@ -559,19 +544,13 @@ public partial class SEUResource
             SEUResource resource = null;
             if (m_Resources.ContainsKey(manifestPath))
             {
-                resource = m_Resources[manifestPath];
-               
+                resource = m_Resources[manifestPath];          
             }
             else
             {
                 resource = new SEUMenifestBundleResource(manifestPath);
                 PushResource(manifestPath, resource);    
             }
-
-            resource.Use();
-#if SEU_DEBUG
-            resource.Debug_MarkStackInfo();
-#endif
             return resource.SendLoadAsyncRequest();
         }
 
@@ -630,10 +609,10 @@ public partial class SEUResource
         protected override void LoadAsset()
         {
             SEUResource bundleRes = m_Pool.LoadAssetBundle(m_LoadPath);
-            AddDependenceResources(bundleRes);
             AssetBundle bundle = bundleRes.asset as AssetBundle;
             if (bundle != null)
             {
+                AddDependenceResources(bundleRes);
                 Object asset = bundle.LoadAsset(System.IO.Path.GetFileName(m_LoadPath));
                 if(m_Asset == null)
                 {
@@ -648,11 +627,10 @@ public partial class SEUResource
             Request request = m_Pool.LoadAssetBundleAsyn(m_LoadPath);
             yield return request;
             SEUResource bundleRes = request.resource;
-            AddDependenceResources(bundleRes);
-
             AssetBundle bundle = bundleRes.asset as AssetBundle;
             if (bundle != null)
             {
+                AddDependenceResources(bundleRes);
                 AssetBundleRequest bdRequest = bundle.LoadAssetAsync(System.IO.Path.GetFileName(m_LoadPath));
                 yield return bdRequest;
                 if(m_Asset == null)
@@ -726,10 +704,10 @@ public partial class SEUResource
 
         protected override void LoadAsset()
         {
-            SEUResource manifestRes = m_Pool.LoadBundleManifest(m_LoadPath);
-            AddDependenceResources(manifestRes);
+            SEUResource manifestRes = m_Pool.LoadBundleManifest(m_LoadPath);          
             if (manifestRes != null&& manifestRes.asset != null)
             {
+                AddDependenceResources(manifestRes);
                 AssetBundleManifest manifest = manifestRes.asset as AssetBundleManifest;
                 if (manifest != null)
                 {
@@ -761,10 +739,10 @@ public partial class SEUResource
         }
         protected override IEnumerator LoadAssetAsync()
         {
-            SEUResource manifestRes = m_Pool.LoadBundleManifest(m_LoadPath);
-            AddDependenceResources(manifestRes);
+            SEUResource manifestRes = m_Pool.LoadBundleManifest(m_LoadPath);          
             if (manifestRes != null && manifestRes.asset != null)
             {
+                AddDependenceResources(manifestRes);
                 AssetBundleManifest manifest = manifestRes.asset as AssetBundleManifest;
                 if (manifest != null)
                 {
