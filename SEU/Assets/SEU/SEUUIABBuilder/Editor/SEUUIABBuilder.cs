@@ -3,32 +3,36 @@ using System.Collections;
 using UnityEditor;
 using System.IO;
 public class UIABBuilder {
+    static readonly string UIViewPath = "assets/resources/view";
     [MenuItem("SEU/Build UI Assetbundle")]
 	static void Build()
-    {
+    {       
         BuildUI();
         string assetbundlesPath =Path.Combine(  System.IO.Path.GetDirectoryName(Application.dataPath),"assetbundles");
         if (!Directory.Exists(assetbundlesPath))
         {
             Directory.CreateDirectory(assetbundlesPath);
-        }
-        Debug.Log(assetbundlesPath);
-        BuildPipeline.BuildAssetBundles(assetbundlesPath, BuildAssetBundleOptions.UncompressedAssetBundle,BuildTarget.StandaloneWindows64);
+        }      
+        AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(assetbundlesPath, BuildAssetBundleOptions.UncompressedAssetBundle, EditorUserBuildSettings.activeBuildTarget);
     }
 
     static void BuildUI()
     {
-        var deps = AssetDatabase.GetDependencies(AssetDatabase.GetAssetPath(Selection.activeGameObject));
-        foreach(var item in deps)
+        string[] resultGUIDs = AssetDatabase.FindAssets("t:Prefab", new string[] { UIViewPath });
+        for(int i = 0; i < resultGUIDs.Length; i++)
         {
-            string extension = System.IO.Path.GetExtension(item);
-            if (extension.Equals(".cs")==false)
+            var deps = AssetDatabase.GetDependencies(AssetDatabase.GUIDToAssetPath(resultGUIDs[i]));
+            foreach (var item in deps)
             {
-                //string bundleName = item.Substring(0, item.Length - extension.Length).Replace("Assets/Resources/","").Replace("Assets/StaticResources/","").Replace("Assets/","");
-                string bundleName = item.Substring(0, item.Length - extension.Length);
-                AssetImporter importer = AssetImporter.GetAtPath(item);
-                importer.assetBundleName = bundleName.ToLower();
+                string extension = System.IO.Path.GetExtension(item);
+                if (extension.Equals(".cs") == false)
+                {
+                    //string bundleName = item.Substring(0, item.Length - extension.Length).Replace("Assets/Resources/","").Replace("Assets/StaticResources/","").Replace("Assets/","");
+                    string bundleName = item.Substring(0, item.Length - extension.Length);
+                    AssetImporter importer = AssetImporter.GetAtPath(item);
+                    importer.assetBundleName = bundleName.ToLower();
+                }
             }
-        }
+        }       
     }
 }

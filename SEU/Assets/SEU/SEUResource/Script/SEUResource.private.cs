@@ -66,7 +66,7 @@ public partial class SEUResource
 
     protected virtual void ReleaseResource()
     {
-        Debug.Log(GetType()+" unload ");
+       // Debug.Log(GetType()+" unload ");
    
     }
 
@@ -227,7 +227,7 @@ public partial class SEUResource
             {
                 m_Asset = bundle.LoadAsset("assetbundlemanifest");
             }
-            LogResult();
+            //LogResult();
         }
         protected override IEnumerator LoadAssetAsync()
         {
@@ -246,7 +246,7 @@ public partial class SEUResource
                     m_Asset = request.asset;
                 }
             }
-            LogResult();
+            //LogResult();
         }
         protected override void ReleaseResource()
         {
@@ -298,7 +298,7 @@ public partial class SEUResource
             {
                 Debug.LogWarning("[异步冲突]");
             }
-            LogResult();
+            //LogResult();
            
         }
 
@@ -334,7 +334,7 @@ public partial class SEUResource
             {
                 Debug.LogWarning("[同步冲突]");
             }
-            LogResult();
+            //LogResult();
         }
 
         protected override void ReleaseResource()

@@ -201,7 +201,7 @@ public partial class SEUResource
             }
             if (m_BundleLoader == null)
             {
-                m_BundleLoader = new SEUBundleLoaderFromMemory();
+                m_BundleLoader = new SEUBundleLoaderFromFile();
             }
             Debug_InitPool();
         }

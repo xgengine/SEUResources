@@ -109,7 +109,7 @@ public class SEUDefulatResourceToBundlePathConverter:IPathConverter
 {
     public string HandlePath(string path)
     {
-        return path;
+        return "assets/resources/" + path;
     }
 }
 
@@ -135,7 +135,7 @@ public abstract class SEUBundleLoader
 
 public class SEUBundleLoaderFromFile:SEUBundleLoader
 {
-    public override   AssetBundle LoadAssetBundle(string bundleName)
+    public override AssetBundle LoadAssetBundle(string bundleName)
     {
         string bundlePath = System.IO.Path.GetDirectoryName(Application.dataPath) + "/assetbundles/" + bundleName;
         AssetBundle bundle = AssetBundle.LoadFromFile(bundlePath);
