@@ -1,0 +1,381 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &131350
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 4
+  m_Component:
+  - 4: {fileID: 409136}
+  - 114: {fileID: 11401012}
+  m_Layer: 0
+  m_Name: UIAtlasActivity
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &409136
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 131350}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+--- !u!114 &11401012
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 131350}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d0c51bb0b6e93049af5e88f93826e3b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  material: {fileID: 2100000, guid: f9ccf417fe4a9e544a033c0c94f6bb96, type: 2}
+  mSprites:
+  - name: art_wenzi_leijidengl
+    x: 0
+    y: 361
+    width: 477
+    height: 66
+    borderLeft: 0
+    borderRight: 0
+    borderTop: 0
+    borderBottom: 0
+    innerBorderLeft: 0
+    innerBorderRight: 0
+    innerBorderTop: 0
+    innerBorderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+    xoff: 0
+    yoff: 0
+    woff: 0
+    hoff: 0
+    pixelSize: 1.6666666
+    slicedType: 0
+  - name: common_bg_meirihuodong_01
+    x: 0
+    y: 84
+    width: 367
+    height: 11
+    borderLeft: 172
+    borderRight: 192
+    borderTop: 6
+    borderBottom: 4
+    innerBorderLeft: 0
+    innerBorderRight: 0
+    innerBorderTop: 0
+    innerBorderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+    xoff: 0
+    yoff: 0
+    woff: 0
+    hoff: 0
+    pixelSize: 4
+    slicedType: 0
+  - name: common_paopao_bg
+    x: 409
+    y: 305
+    width: 94
+    height: 52
+    borderLeft: 25
+    borderRight: 67
+    borderTop: 0
+    borderBottom: 0
+    innerBorderLeft: 0
+    innerBorderRight: 0
+    innerBorderTop: 0
+    innerBorderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+    xoff: 0
+    yoff: 0
+    woff: 0
+    hoff: 0
+    pixelSize: 1.4285715
+    slicedType: 0
+  - name: common_TSrenwu_icon
+    x: 107
+    y: 165
+    width: 41
+    height: 40
+    borderLeft: 0
+    borderRight: 0
+    borderTop: 0
+    borderBottom: 0
+    innerBorderLeft: 0
+    innerBorderRight: 0
+    innerBorderTop: 0
+    innerBorderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 1
+    xoff: 0
+    yoff: 0
+    woff: 0
+    hoff: 0
+    pixelSize: 1.4285715
+    slicedType: 0
+  - name: common_xuanzhong01_icon
+    x: 72
+    y: 106
+    width: 32
+    height: 27
+    borderLeft: 0
+    borderRight: 0
+    borderTop: 0
+    borderBottom: 0
+    innerBorderLeft: 0
+    innerBorderRight: 0
+    innerBorderTop: 0
+    innerBorderBottom: 0
+    paddingLeft: 0
+    paddingRight: 1
+    paddingTop: 0
+    paddingBottom: 0
+    xoff: 0
+    yoff: 0
+    woff: 0
+    hoff: 0
+    pixelSize: 1.4285715
+    slicedType: 0
+  - name: kaicelibao_icon
+    x: 0
+    y: 431
+    width: 407
+    height: 81
+    borderLeft: 0
+    borderRight: 0
+    borderTop: 0
+    borderBottom: 0
+    innerBorderLeft: 0
+    innerBorderRight: 0
+    innerBorderTop: 0
+    innerBorderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+    xoff: 0
+    yoff: 0
+    woff: 0
+    hoff: 0
+    pixelSize: 1.4285715
+    slicedType: 0
+  - name: leijidenglu_bg_paopao
+    x: 411
+    y: 467
+    width: 83
+    height: 45
+    borderLeft: 45
+    borderRight: 34
+    borderTop: 29
+    borderBottom: 11
+    innerBorderLeft: 0
+    innerBorderRight: 0
+    innerBorderTop: 0
+    innerBorderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+    xoff: 0
+    yoff: 0
+    woff: 0
+    hoff: 0
+    pixelSize: 1.4285715
+    slicedType: 0
+  - name: leijidenglu_bg_tianshu
+    x: 411
+    y: 442
+    width: 90
+    height: 21
+    borderLeft: 0
+    borderRight: 0
+    borderTop: 0
+    borderBottom: 0
+    innerBorderLeft: 0
+    innerBorderRight: 0
+    innerBorderTop: 0
+    innerBorderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+    xoff: 0
+    yoff: 0
+    woff: 0
+    hoff: 0
+    pixelSize: 1.4285715
+    slicedType: 0
+  - name: leijidenglu_bg_yilingqu
+    x: 0
+    y: 137
+    width: 103
+    height: 68
+    borderLeft: 0
+    borderRight: 0
+    borderTop: 0
+    borderBottom: 0
+    innerBorderLeft: 0
+    innerBorderRight: 0
+    innerBorderTop: 0
+    innerBorderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+    xoff: 0
+    yoff: 0
+    woff: 0
+    hoff: 0
+    pixelSize: 1.4285715
+    slicedType: 0
+  - name: shouchonglibao_tittle
+    x: 0
+    y: 296
+    width: 405
+    height: 61
+    borderLeft: 0
+    borderRight: 0
+    borderTop: 0
+    borderBottom: 0
+    innerBorderLeft: 0
+    innerBorderRight: 0
+    innerBorderTop: 0
+    innerBorderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 1
+    xoff: 0
+    yoff: 0
+    woff: 0
+    hoff: 0
+    pixelSize: 1.4285715
+    slicedType: 0
+  - name: TSHDRW_jiesuo_bg
+    x: 0
+    y: 209
+    width: 156
+    height: 83
+    borderLeft: 0
+    borderRight: 0
+    borderTop: 0
+    borderBottom: 0
+    innerBorderLeft: 0
+    innerBorderRight: 0
+    innerBorderTop: 0
+    innerBorderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+    xoff: 0
+    yoff: 0
+    woff: 0
+    hoff: 0
+    pixelSize: 1.4285715
+    slicedType: 0
+  - name: TSHDRW_kelingqu_icon
+    x: 0
+    y: 106
+    width: 68
+    height: 27
+    borderLeft: 0
+    borderRight: 0
+    borderTop: 0
+    borderBottom: 0
+    innerBorderLeft: 0
+    innerBorderRight: 0
+    innerBorderTop: 0
+    innerBorderBottom: 0
+    paddingLeft: 0
+    paddingRight: 1
+    paddingTop: 0
+    paddingBottom: 0
+    xoff: 0
+    yoff: 0
+    woff: 0
+    hoff: 0
+    pixelSize: 1.4285715
+    slicedType: 0
+  - name: TSHDRW_wctjdiban_bg
+    x: 160
+    y: 257
+    width: 345
+    height: 35
+    borderLeft: 15
+    borderRight: 328
+    borderTop: 0
+    borderBottom: 0
+    innerBorderLeft: 0
+    innerBorderRight: 0
+    innerBorderTop: 0
+    innerBorderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+    xoff: 0
+    yoff: 0
+    woff: 0
+    hoff: 0
+    pixelSize: 1.4285715
+    slicedType: 0
+  - name: TSRWHD_bg
+    x: 160
+    y: 99
+    width: 56
+    height: 154
+    borderLeft: 27
+    borderRight: 27
+    borderTop: 28
+    borderBottom: 122
+    innerBorderLeft: 0
+    innerBorderRight: 0
+    innerBorderTop: 0
+    innerBorderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
+    xoff: 0
+    yoff: 0
+    woff: 0
+    hoff: 0
+    pixelSize: 1.4285715
+    slicedType: 0
+  mPixelSize: 1
+  mReplacement: {fileID: 0}
+  mCoordinates: 0
+  sprites: []
+--- !u!1001 &100100000
+Prefab:
+  m_ObjectHideFlags: 1
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications: []
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 0}
+  m_RootGameObject: {fileID: 131350}
+  m_IsPrefabParent: 1

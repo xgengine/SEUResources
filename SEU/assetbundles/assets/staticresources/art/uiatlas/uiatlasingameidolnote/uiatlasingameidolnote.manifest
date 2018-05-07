@@ -1,0 +1,32 @@
+ManifestFileVersion: 0
+CRC: 450393284
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 642add793f11c43947f13ece860d6a4e
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: ecc95e40b348fb0f96808886fcf95078
+HashAppended: 0
+ClassTypes:
+- Class: 1
+  Script: {instanceID: 0}
+- Class: 4
+  Script: {instanceID: 0}
+- Class: 21
+  Script: {instanceID: 0}
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 48
+  Script: {instanceID: 0}
+- Class: 114
+  Script: {fileID: 11500000, guid: 4d0c51bb0b6e93049af5e88f93826e3b, type: 3}
+- Class: 115
+  Script: {instanceID: 0}
+Assets:
+- Assets/StaticResources/art/UIAtlas/UIAtlasInGameIdolNote/UIAtlasInGameIdolNote.mat
+- Assets/StaticResources/art/UIAtlas/UIAtlasInGameIdolNote/UIAtlasInGameIdolNote.prefab
+- Assets/StaticResources/art/UIAtlas/UIAtlasInGameIdolNote/UIAtlasInGameIdolNote.png
+Dependencies:
+- C:/Users/14034/Desktop/UnityDemo/Unity/SEU/assetbundles/assets/ngui/resources/shaders/unlit
+  - transparent colored

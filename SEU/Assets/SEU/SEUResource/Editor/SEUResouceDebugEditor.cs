@@ -9,7 +9,10 @@ public class SEUResouceDebugEditor : Editor{
     {
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             SEUResourceDebug debugObject = target as SEUResourceDebug;
-            EditorGUILayout.LabelField("SEUResource", EditorStyles.boldLabel);
+            var oc = GUI.color;
+            GUI.color = Color.yellow;
+            EditorGUILayout.LabelField("SEUResource ["+debugObject.resource.GetType()+"]", EditorStyles.boldLabel);
+            GUI.color = oc;
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             DrawSEUResource(debugObject.resource);
             EditorGUILayout.EndVertical();

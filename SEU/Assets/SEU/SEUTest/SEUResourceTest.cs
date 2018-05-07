@@ -3,18 +3,18 @@ using System.Collections;
 
 public class SEUResourceTest : MonoBehaviour {
 
-    class testABPathBuilder: SEUABPathBuilder
-    {
-        public override string BundlePathHandle(string path)
-        {
+    //class testABPathBuilder: SEUABPathBuilder
+    //{
+    //    public override string BundlePathHandle(string path)
+    //    {
 
-            return path.Replace("1","");
-        }
-        public override string ManifestBundlePathHandle(string path)
-        {
-            return "a/test_group";
-        }
-    }
+    //        return path.Replace("1","");
+    //    }
+    //    public override string ManifestBundlePathHandle(string path)
+    //    {
+    //        return "a/test_group";
+    //    }
+    //}
 
    // SEUResource resource;
     void Start () {
@@ -25,7 +25,7 @@ public class SEUResourceTest : MonoBehaviour {
         //Instantiate(requst.resource.asset);
 
         //assetbundle test
-        SEUResource.ResisterGroupPath("a", SEULoaderType.AB,SEUResourceUnLoadType.REFCOUNT_ZERO, new testABPathBuilder());
+        SEUResource.ResisterGroupPath("a", SEULoaderType.AB,SEUResourceUnLoadType.REFCOUNT_ZERO);
 
 
         //SEUResource.Request requst = SEUResource.LoadAsyn("a/cube");

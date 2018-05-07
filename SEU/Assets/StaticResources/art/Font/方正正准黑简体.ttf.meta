@@ -1,0 +1,20 @@
+fileFormatVersion: 2
+guid: 50e3b6fdd9ad72a439eb8a335417a76d
+timeCreated: 1525533392
+licenseType: Pro
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontNames:
+  - FZZhengHei-M-GBK
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: "assets/staticresources/art/font/\u65B9\u6B63\u6B63\u51C6\u9ED1\u7B80\u4F53"
+  assetBundleVariant: 

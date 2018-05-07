@@ -147,437 +147,6 @@ public partial class SEUResource
     }
 #endif
 
-    static SEUResourcePool m_ResourcePool;
-
-    static SEUResource()
-    {
-        m_ResourcePool = new SEUResourcePool();
-        m_ResourcePool.InitPool("Resource", SEULoaderType.RESOURCE);
-    }
-
-    private class SEUResourcePool
-    {
-        class SEULoaderResourceGroupPooolRegister
-        {
-            class PathNode
-            {
-                internal string name;
-                internal List<PathNode> m_ChildNode = new List<PathNode>();
-                internal int poolCode = -1;
-                internal SEUResourcePool Register(string[] folders, int index = 0)
-                {
-                    string nodeName = folders[index];
-                    PathNode cnode = null;
-                    for (int i = 0; i < m_ChildNode.Count; i++)
-                    {
-                        if (m_ChildNode[i].name == nodeName)
-                        {
-                            cnode = m_ChildNode[i];
-                        }
-                    }
-                    if (cnode == null)
-                    {
-                        if (folders.Length - 1 == index)
-                        {
-                            PathNode endNode = new PathNode();
-                            SEUResourcePool pool = new SEUResourcePool();
-                            endNode.poolCode = pool.GetHashCode();
-                            endNode.name = folders[index];
-                            m_ChildNode.Add(endNode);
-                            return pool;
-                        }
-                        else
-                        {
-                            PathNode midNode = new PathNode();
-                            midNode.name = folders[index];
-                            m_ChildNode.Add(midNode);
-                            index++;
-                            return midNode.Register(folders, index);
-                        }
-                    }
-                    else
-                    {
-                        if (folders.Length - 1 == index)
-                        {
-                            Debug.LogError("Already Resgister");
-                            return null;
-                        }
-                        else
-                        {
-                            if (cnode.poolCode != -1)
-                            {
-                                Debug.LogError("Register Error 2");
-                                return null;
-                            }
-                            index++;
-                            return cnode.Register(folders, index);
-                        }
-                    }
-                }
-                internal int GetPoolCode(string[] folders, int index = 0)
-                {
-                    string nodeName = folders[index];
-                    PathNode cnode = null;
-                    for (int i = 0; i < m_ChildNode.Count; i++)
-                    {
-                        if (m_ChildNode[i].name == nodeName)
-                        {
-                            cnode = m_ChildNode[i];
-                            break;
-                        }
-                    }
-                    if (cnode != null)
-                    {
-                        if (cnode.poolCode != - 1 )
-                        {
-                            return cnode.poolCode;
-                        }
-                        else
-                        {
-                            index++;
-                            return cnode.GetPoolCode(folders, index);
-                        }
-                    }
-                    return -1;
-                }
-            }
-            PathNode Root;
-            internal SEULoaderResourceGroupPooolRegister()
-            {
-                Root = new PathNode();
-            }
-            internal SEUResourcePool ResisterGroupPath(string path)
-            {
-                string[] folders = path.Split(new string[] { "/" }, System.StringSplitOptions.None);
-                SEUResourcePool pool = Root.Register(folders);
-                return pool;
-
-            }
-            internal int GetGroupPoolCode(string path)
-            {
-                string[] folders = path.Split(new string[] { "/" }, System.StringSplitOptions.None);
-                return Root.GetPoolCode(folders);
-            }
-        }
-
-        private Dictionary<int, SEUResourcePool> m_ResourceGroupPool = new Dictionary<int, SEUResourcePool>();
-        private Dictionary<string, SEUResource> m_Resources = new Dictionary<string, SEUResource>();
-        private Dictionary<string, SEUResource> m_AssetBundles = new Dictionary<string, SEUResource>();
-        private SEULoaderResourceGroupPooolRegister m_GroupPoolRegister;
-        private SEULoaderType         m_LoaderType;
-        private SEUResourceUnLoadType m_UnloadType;
-        private SEUABPathBuilder      m_ABPathBuilder;
-
-        private string m_GroupPath = "Resources";
-
-#if SEU_DEBUG
-        static GameObject Debug_SEUPoolObject;
-        GameObject Debug_GroupPoolObject;
-        GameObject Debug_AssetsObject;
-        GameObject Debug_AssetBundlesObject;
-
-        static SEUResourcePool()
-        {
-            Debug_SEUPoolObject = new GameObject("SEUPool");
-            GameObject.DontDestroyOnLoad(Debug_SEUPoolObject);
-        }
-#endif
-        public SEUResourcePool()
-        {
-            m_GroupPoolRegister = new SEULoaderResourceGroupPooolRegister();
-        }
-
-        internal string groupPath
-        {
-            get
-            {
-                return m_GroupPath;
-            }
-        }
-
-        internal void InitPool(string groupPath, SEULoaderType loaderType, SEUResourceUnLoadType unLoadType =SEUResourceUnLoadType.REFCOUNT_ZERO, SEUABPathBuilder abPathBuilder=null)
-        {
-            m_GroupPath = groupPath;
-            m_LoaderType = loaderType;
-            m_ABPathBuilder = abPathBuilder;
-            m_UnloadType = unLoadType;
-
-#if SEU_DEBUG
-            GameObject degbug_GroupPoolObject = new GameObject(m_GroupPath);
-            degbug_GroupPoolObject.transform.SetParent(Debug_SEUPoolObject.transform);
-            if (abPathBuilder != null)
-            {
-                Debug_AssetBundlesObject = new GameObject("AssetBundle");
-                Debug_AssetBundlesObject.transform.SetParent(degbug_GroupPoolObject.transform); 
-            }
-            Debug_AssetsObject = new GameObject("Assets");
-            Debug_AssetsObject.transform.SetParent(degbug_GroupPoolObject.transform);
-#endif
-        }
-
-        private void PushResource(string path, SEUResource resource)
-        {
-            Dictionary<string, SEUResource> container = null;
-            if (resource is SEUABResource)
-            {
-                container = m_AssetBundles;    
-            }
-            else
-            {
-                container = m_Resources;
-            }
-            if (!container.ContainsKey(path))
-            {
-                container.Add(path, resource);
-                resource.AttachPool(this);
-#if SEU_DEBUG
-                if(container == m_AssetBundles)
-                {
-                    resource.DebugCreateObject();
-                    resource.DebugObject.transform.SetParent(Debug_AssetBundlesObject.transform);
-                }
-                else
-                {
-                    resource.DebugCreateObject();
-                    resource.DebugObject.transform.SetParent(Debug_AssetsObject.transform);
-                }         
-#endif
-            }
-            else
-            {
-                Debug.LogError("Error");
-            }
-        }
-
-        internal void PopResource(SEUResource resource)
-        {
-            string path = resource.loadPath;
-            Dictionary<string, SEUResource> container = null;
-            if (resource is SEUABResource)
-            {
-                container = m_AssetBundles;
-            }
-            else
-            {
-                container = m_Resources;
-            }
-
-            if (container.ContainsKey(path))
-            {
-                if(m_UnloadType == SEUResourceUnLoadType.REFCOUNT_ZERO)
-                {                   
-                    container.Remove(path);
-                    resource.ReleaseResource();
-#if SEU_DEBUG
-                    GameObject.Destroy(resource.DebugObject);
-#endif
-                }
-            }
-            else
-            {
-                Debug.LogError("Error");
-            }
-        }
-
-        internal SEUResource Load(string path)
-        {
-            SEUResourcePool pool = GetGroupPool(path);
-            if (pool != null)
-            {
-                return pool.LoadInternal(path);
-            }
-            return null;
-        }
-
-        private SEUResourcePool GetGroupPool(string path)
-        {
-            int id = m_GroupPoolRegister.GetGroupPoolCode(path);
-            SEUResourcePool pool = null;
-            if (id == -1)
-            {
-                pool = this;
-
-            }
-            else
-            {
-                if (m_ResourceGroupPool.ContainsKey(id))
-                {
-                    pool = m_ResourceGroupPool[id];
-                }
-            }
-            return pool;
-        }
-
-        private SEUResource LoadInternal(string path)
-        {
-            SEUResource resource = null;
-            if (m_Resources.ContainsKey(path))
-            {
-                resource = m_Resources[path];
-            }
-            else
-            {
-                switch (m_LoaderType)
-                {
-                    case SEULoaderType.RESOURCE:
-                        resource = new SEUNormalResource(path);
-                        break;
-                    case SEULoaderType.AB:
-                        resource = new SEUResourceLoadedFromBundle(path);
-                        break;
-                }
-                PushResource(path, resource);
-               
-            }
-            if(resource.asset == null)
-            {
-                resource.LoadAsset();
-            }
-            resource.Use();
-#if SEU_DEBUG
-            resource.Debug_MarkStackInfo();
-#endif
-            return resource;
-        }
-
-        private Request LoadAsynInternal(string path)
-        {        
-            SEUResource resource = null;
-            if (m_Resources.ContainsKey(path))
-            {
-                resource = m_Resources[path];           
-            }
-            else
-            {
-                switch (m_LoaderType)
-                {
-                    case SEULoaderType.RESOURCE:
-                        resource = new SEUNormalResource(path);
-                        break;
-                    case SEULoaderType.AB:
-                        resource = new SEUResourceLoadedFromBundle(path);
-                        break;
-                }
-                PushResource(path, resource); 
-            }
-            resource.Use();
-#if SEU_DEBUG
-            resource.Debug_MarkStackInfo();
-#endif
-            return resource.SendLoadAsyncRequest();
-        }
-
-        internal Request LoadAsyn(string path)
-        {
-            SEUResourcePool pool = GetGroupPool(path);
-            if (pool != null)
-            {
-                return pool.LoadAsynInternal(path);
-            }
-            return null; ;
-        }
-
-        internal SEUResource LoadAssetBundle(string path)
-        {
-            string bundlePath = m_ABPathBuilder.BundlePathHandle(path);
-            SEUResource resource = null;
-            if (m_AssetBundles.ContainsKey(bundlePath))
-            {
-                resource = m_AssetBundles[bundlePath];
-                /// 这样处理 为了同步和异步并存
-                if (resource.asset == null)
-                {
-                    resource.LoadAsset();
-                }
-            }
-            else
-            {
-                resource = new SEUABResource(bundlePath);
-                PushResource(bundlePath, resource);
-                resource.LoadAsset();
-            }
-
-            return resource;
-        }
-
-        internal Request LoadAssetBundleAsyn(string path)
-        {
-            string bundlePath = m_ABPathBuilder.BundlePathHandle(path);
-            SEUResource resource = null;
-            if (m_AssetBundles.ContainsKey(bundlePath))
-            {
-                resource = m_AssetBundles[bundlePath]; 
-            }
-            else
-            {
-                resource = new SEUABResource(bundlePath);
-                PushResource(bundlePath, resource); 
-            }
-            return resource.SendLoadAsyncRequest();
-        }
-
-        internal SEUResource LoadBundleManifest(string path)
-        {
-            string manifestPath = m_ABPathBuilder.ManifestBundlePathHandle(path);
-            SEUResource resource = null;
-            if (m_Resources.ContainsKey(manifestPath))
-            {
-                resource = m_Resources[manifestPath];
-                if (resource.asset == null)
-                {
-                    resource.LoadAsset();
-                }
-            }
-            else
-            {
-                resource = new SEUMenifestBundleResource(manifestPath);
-                PushResource(manifestPath, resource);
-                resource.LoadAsset();
-            }
-            return resource;
-        }
-
-        internal Request LoadBundleManifestAsync(string path)
-        {
-
-            string manifestPath = m_ABPathBuilder.ManifestBundlePathHandle(path);
-            SEUResource resource = null;
-            if (m_Resources.ContainsKey(manifestPath))
-            {
-                resource = m_Resources[manifestPath];          
-            }
-            else
-            {
-                resource = new SEUMenifestBundleResource(manifestPath);
-                PushResource(manifestPath, resource);    
-            }
-            return resource.SendLoadAsyncRequest();
-        }
-
-        internal void ResisterGroupPath(string path, SEULoaderType loaderType,SEUResourceUnLoadType unLoadType, SEUABPathBuilder ABPathBuilder)
-        {
-            SEUResourcePool pool = m_GroupPoolRegister.ResisterGroupPath(path);
-            if (pool != null)
-            {
-                pool.InitPool(path, loaderType, unLoadType, ABPathBuilder);
-            }
-            AddGroupPool(pool);
-        }
-
-        private void AddGroupPool(SEUResourcePool pool)
-        {
-            if (pool != null)
-            {
-                int poolCode = pool.GetHashCode();
-                if (!m_ResourceGroupPool.ContainsKey(poolCode))
-                {
-                    m_ResourceGroupPool.Add(poolCode, pool);
-                }
-            }
-        }
-
-    }
-
     /// <summary>
     /// 采用资源从中 Resources 加载方式的资源类
     /// </summary>
@@ -608,7 +177,7 @@ public partial class SEUResource
         }
         protected override void LoadAsset()
         {
-            SEUResource bundleRes = m_Pool.LoadAssetBundle(m_LoadPath);
+            SEUResource bundleRes = m_Pool.LoadAssetBundle(m_LoadPath,true);
             AssetBundle bundle = bundleRes.asset as AssetBundle;
             if (bundle != null)
             {
@@ -624,7 +193,7 @@ public partial class SEUResource
 
         protected override IEnumerator LoadAssetAsync()
         {
-            Request request = m_Pool.LoadAssetBundleAsyn(m_LoadPath);
+            Request request = m_Pool.LoadAssetBundleAsyn(m_LoadPath,true);
             yield return request;
             SEUResource bundleRes = request.resource;
             AssetBundle bundle = bundleRes.asset as AssetBundle;
@@ -653,8 +222,7 @@ public partial class SEUResource
         }
         protected override void LoadAsset()
         {
-            byte[] buffer = SEUFileLoader.ReadAllBytes(m_LoadPath);
-            bundle = AssetBundle.LoadFromMemory(buffer);
+            bundle = m_Pool.LoadAssetBundleInternal(m_LoadPath);
             if (bundle != null)
             {
                 m_Asset = bundle.LoadAsset("assetbundlemanifest");
@@ -663,8 +231,7 @@ public partial class SEUResource
         }
         protected override IEnumerator LoadAssetAsync()
         {
-            byte[] buffer = SEUFileLoader.ReadAllBytes(m_LoadPath);
-            AssetBundleCreateRequest  createReuest= AssetBundle.LoadFromMemoryAsync(buffer);
+            AssetBundleCreateRequest  createReuest= m_Pool.LoadAssetBundlAsynInternal(m_LoadPath);
             yield return createReuest;
             if(bundle == null)
             {
@@ -677,17 +244,18 @@ public partial class SEUResource
                 if(m_Asset == null)
                 {
                     m_Asset = request.asset;
-                }      
+                }
             }
             LogResult();
         }
         protected override void ReleaseResource()
         {
             base.ReleaseResource();
-            if (bundle != null)
+            if(bundle != null)
             {
                 bundle.Unload(true);
             }
+
         }
     }
 
@@ -722,13 +290,9 @@ public partial class SEUResource
                     }
                 } 
             } 
-            ///加载AB包
-            byte[] buffer = SEUFileLoader.ReadAllBytes(m_LoadPath);
             if(m_Asset == null)
-            {
-                //string path = Application.dataPath + "/Bundles/test_group/" + m_LoadPath;
-                //m_Asset = AssetBundle.LoadFromFile(path);
-                m_Asset = AssetBundle.LoadFromMemory(buffer);
+            {                 
+                m_Asset = m_Pool.LoadAssetBundleInternal(m_LoadPath);
             }
             else
             {
@@ -737,6 +301,7 @@ public partial class SEUResource
             LogResult();
            
         }
+
         protected override IEnumerator LoadAssetAsync()
         {
             SEUResource manifestRes = m_Pool.LoadBundleManifest(m_LoadPath);          
@@ -759,9 +324,7 @@ public partial class SEUResource
                     }
                 }
             }
-            ///加载AB包
-            byte[] buffer = SEUFileLoader.ReadAllBytes(m_LoadPath);
-            AssetBundleCreateRequest createRequest  = AssetBundle.LoadFromMemoryAsync(buffer);
+            AssetBundleCreateRequest createRequest  = m_Pool.LoadAssetBundlAsynInternal(m_LoadPath);
             yield return createRequest;
             if(m_Asset == null)//做一下判断 防止和同步冲突
             {

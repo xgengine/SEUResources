@@ -1,0 +1,23 @@
+ManifestFileVersion: 0
+CRC: 4010161718
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 6269d1ebce8237c0cc13510ff7eae0e9
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 6e91bf4d7bfc7c90eaa9aea5318d52d8
+HashAppended: 0
+ClassTypes:
+- Class: 21
+  Script: {instanceID: 0}
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 48
+  Script: {instanceID: 0}
+Assets:
+- Assets/StaticResources/art/UIMat/JJC_shenzhihsou_390X390_mat.mat
+Dependencies:
+- C:/Users/14034/Desktop/UnityDemo/Unity/SEU/assetbundles/assets/staticresources/art/uimat/jjc_shenzhihsou_390x390
+- C:/Users/14034/Desktop/UnityDemo/Unity/SEU/assetbundles/assets/ngui/resources/shaders/unlit
+  - transparent colored

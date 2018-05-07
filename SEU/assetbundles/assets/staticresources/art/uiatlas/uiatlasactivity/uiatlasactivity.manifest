@@ -1,0 +1,32 @@
+ManifestFileVersion: 0
+CRC: 2872663199
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: b5d3095b414ff4300216e7a3ab53fbcb
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: ecc95e40b348fb0f96808886fcf95078
+HashAppended: 0
+ClassTypes:
+- Class: 1
+  Script: {instanceID: 0}
+- Class: 4
+  Script: {instanceID: 0}
+- Class: 21
+  Script: {instanceID: 0}
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 48
+  Script: {instanceID: 0}
+- Class: 114
+  Script: {fileID: 11500000, guid: 4d0c51bb0b6e93049af5e88f93826e3b, type: 3}
+- Class: 115
+  Script: {instanceID: 0}
+Assets:
+- Assets/StaticResources/art/UIAtlas/UIAtlasActivity/UIAtlasActivity.prefab
+- Assets/StaticResources/art/UIAtlas/UIAtlasActivity/UIAtlasActivity.png
+- Assets/StaticResources/art/UIAtlas/UIAtlasActivity/UIAtlasActivity.mat
+Dependencies:
+- C:/Users/14034/Desktop/UnityDemo/Unity/SEU/assetbundles/assets/ngui/resources/shaders/unlit
+  - transparent colored
