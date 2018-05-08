@@ -10,7 +10,7 @@ public class MainViewContext : BaseContext
 }
 
 public class MainView : BaseView {
-    
+    public GameObject obj;
     public override void OnEnter(BaseContext context)
     {
         base.OnEnter(context);

@@ -272,6 +272,15 @@ public partial class SEUResource
 
         protected override void LoadAsset()
         {
+            if (m_Asset == null)
+            {
+                m_Asset = m_Pool.LoadAssetBundleInternal(m_LoadPath);
+            }
+            else
+            {
+                Debug.LogWarning("[异步冲突]");
+            }
+
             SEUResource manifestRes = m_Pool.LoadBundleManifest(m_LoadPath);          
             if (manifestRes != null&& manifestRes.asset != null)
             {
@@ -289,21 +298,23 @@ public partial class SEUResource
                         }
                     }
                 } 
-            } 
-            if(m_Asset == null)
-            {                 
-                m_Asset = m_Pool.LoadAssetBundleInternal(m_LoadPath);
-            }
-            else
-            {
-                Debug.LogWarning("[异步冲突]");
             }
             //LogResult();
-           
+
         }
 
         protected override IEnumerator LoadAssetAsync()
         {
+            AssetBundleCreateRequest createRequest = m_Pool.LoadAssetBundlAsynInternal(m_LoadPath);
+            yield return createRequest;
+            if (m_Asset == null)//做一下判断 防止和同步冲突
+            {
+                m_Asset = createRequest.assetBundle;
+            }
+            else
+            {
+                Debug.LogWarning("[同步冲突] 已经处理");
+            }
             SEUResource manifestRes = m_Pool.LoadBundleManifest(m_LoadPath);          
             if (manifestRes != null && manifestRes.asset != null)
             {
@@ -323,16 +334,6 @@ public partial class SEUResource
                         }
                     }
                 }
-            }
-            AssetBundleCreateRequest createRequest  = m_Pool.LoadAssetBundlAsynInternal(m_LoadPath);
-            yield return createRequest;
-            if(m_Asset == null)//做一下判断 防止和同步冲突
-            {
-                m_Asset = createRequest.assetBundle;
-            }
-            else
-            {
-                Debug.LogWarning("[同步冲突] 已经处理");
             }
             //LogResult();
         }
