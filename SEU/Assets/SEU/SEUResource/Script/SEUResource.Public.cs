@@ -35,6 +35,7 @@ public partial class SEUResource{
 
     static public Request LoadAsyn(string path)
     {
+        path = path.ToLower();
         return m_ResourcePool.LoadAsyn(path);
     }
 
