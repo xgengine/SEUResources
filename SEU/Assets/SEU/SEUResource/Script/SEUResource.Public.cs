@@ -1,18 +1,13 @@
 ﻿#define SEU_DEBUG
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 /// <summary>
 /// SEUResource 对Unity资源加载进行封装、保持和 Resources 资源加载接口形式，并对资源进行引用计数的管理
 /// </summary>
 public partial class SEUResource{
-    public Object asset
-    {
-        get
-        {
-            return m_Asset;
-        }
-    }
+
     static public void ResisterGroupPath(
         string groupPath,
         SEULoaderType loaderType,
@@ -28,57 +23,143 @@ public partial class SEUResource{
         m_ResourcePool.ResisterGroupPath(groupPath, loaderType, unLoadType, manifestBunderPathProvider,resToBundlerPathConverter);
     }
 
-    static public SEUResource Load(string path)
+    static public T Instantiate<T>(Object asset) where T : Object
     {
-        path = path.ToLower();
-        SEUResource result = m_ResourcePool.Load(path,typeof(UnityEngine.Object));
-        return result;
-    }
-
-    static public SEUResource Load(string path,System.Type type)
-    {
-        path = path.ToLower();
-        SEUResource result = m_ResourcePool.Load(path,type);
-        return result;
-    }
-    static public SEUResource Load<T>(string path) where T: Object
-    {
-        path = path.ToLower();
-        SEUResource result = m_ResourcePool.Load(path, typeof(T));
-
-        return result;
-    }
-
-    static public Request LoadAsyn(string path)
-    {
-        path = path.ToLower();
-        return m_ResourcePool.LoadAsyn(path,typeof(UnityEngine.Object));
-    }
-    static public Request LoadAsyn(string path,System.Type type)
-    {
-        path = path.ToLower();
-        return m_ResourcePool.LoadAsyn(path, type);
-    }
-    static public Request LoadAsyn<T>(string path)
-    {
-        path = path.ToLower();
-        return m_ResourcePool.LoadAsyn(path, typeof(T));
-    }
-
-    static public void UnLoadResource(SEUResource resource)
-    {
-#if SEU_DEBUG
-        resource.Debug_StackInfo.Add("[UnLoad]" + StackTraceUtility.ExtractStackTrace());
-
-#endif
-        if(resource != null)
+        T obj = null;
+        if(asset != null)
         {
-            resource.UnUsed();
-        }       
+            obj = Object.Instantiate<T>(asset as T);
+            InstantiateAsset(asset.GetInstanceID(), obj.GetInstanceID());
+        }
+        else
+        {
+            Debug.LogError("[SEUResource] Instantiate Object But The Object is NULL");
+        }
+        return obj;
+    }
+    static public Object Instantiate(Object asset)
+    {
+        Object obj = null;
+        if (asset != null)
+        {
+            obj = Object.Instantiate(asset);
+            InstantiateAsset(asset.GetInstanceID(), obj.GetInstanceID());
+        }
+        else
+        {
+            Debug.LogError("[SEUResource] Instantiate Object But The Object is NULL");
+        }
+        return obj;
+    }
+    static public Object Instantiate(Object asset,Vector3 postion ,Quaternion quaternion)
+    {
+        Object obj = null;
+        if (asset != null)
+        {
+            obj = Object.Instantiate(asset,postion,quaternion);
+            InstantiateAsset(asset.GetInstanceID(), obj.GetInstanceID());
+        }
+        else
+        {
+            Debug.LogError("[SEUResource] Instantiate Object But The Object is NULL");
+        }
+        return obj;
+    }
+
+    static public T Load<T>(string path) where T : Object
+    {
+        return Load(path, typeof(T)) as T;
+    }
+
+    static public Object Load(string path)
+    {
+        return Load(path, typeof(UnityEngine.Object));
+    }
+
+    static public Object Load(string path, System.Type type)
+    {
+        SEUResource resource = _Load(path, type);
+        return PushResource(resource, true);
+    }
+
+    static public Request LoadAsync<T>(string path) where T : Object
+    {
+        return LoadAsync(path, typeof(T));
+    }
+
+    static private Request LoadAsync(string path, System.Type type)
+    {
+        Request request = _LoadAsync(path,type,
+            (resource) => {
+                PushResource(resource, true);
+            }
+        );
+        return request;
+
+    }
+
+    static private Request LoadAsync(string path)
+    {
+        return LoadAsync(path, typeof(UnityEngine.Object));
+    }
+
+    static private Object PushResource(SEUResource resource, bool isAsset) 
+    {
+        Object asset = null;
+        if (resource != null)
+        {
+            Dictionary<int, SEUResource> record = null;
+            if (isAsset)
+            {
+                record = m_AssetRefSEUResource;
+            }
+            else
+            {
+                record = m_InstantiateRefSEUResource;
+            }
+            if (resource.asset != null)
+            {
+                int code = resource.asset.GetInstanceID();
+                if (!record.ContainsKey(code))
+                {
+                    record.Add(code, resource);
+                }
+                asset = resource.asset;
+            }
+            else
+            {
+                resource.UnUsed();
+            }
+        }
+        return asset;
+    }
+
+    static public void DestoryObject(Object asset)
+    {
+        if (asset != null)
+        {
+           
+            if ((TryDestoryObject(asset, true) || TryDestoryObject(asset, false)) == false)
+            {
+                Debug.LogError("[SEUResource] Try Destory Object ,But it not in Ref System " + StackTraceUtility.ExtractStackTrace());
+            }
+        }
+        
     }
 
     public class Request : CustomYieldInstruction
     {
+        public Object asset
+        {
+            get
+            {
+                if (m_Resource != null)
+                {
+                    return m_Resource.asset;
+                }
+                return null;
+            }
+        }
         private SEUResource m_Resource;
         public SEUResource resource
         {
@@ -87,15 +168,32 @@ public partial class SEUResource{
                 return m_Resource;
             }
         }
-        internal Request(SEUResource resource)
+        internal Request(SEUResource resource,System.Action<SEUResource> callback =null)
         {
             m_Resource = resource;
-            SEUResourceRequestRunner.SendReqest(MainLoop());
+            if (resource.asset == null)
+            {
+                SEUResourceRequestRunner.SendReqest(MainLoop(callback));
+            }
+            else
+            {
+                if (callback != null)
+                {
+                    callback(resource);
+                }
+                m_KepWaiting = false;
+            }
+           
         }
-        IEnumerator MainLoop()
+        IEnumerator MainLoop(System.Action<SEUResource> callback =null)
         {
             yield return resource.LoadAssetAsync();
+            if (callback != null)
+            {
+                callback(resource);
+            }
             m_KepWaiting = false;
+
         }
         private bool m_KepWaiting = true;
         public override bool keepWaiting
