@@ -16,8 +16,6 @@ public partial class SEUResource
     }
     protected System.Type m_Type = typeof( UnityEngine.Object);
     protected string m_LoadPath;
-    private static Dictionary<int, SEUResource> m_AssetRefSEUResource = new Dictionary<int, SEUResource>();
-    private static Dictionary<int, SEUResource> m_InstantiateRefSEUResource = new Dictionary<int, SEUResource>();
 
     public string loadPath
     {
@@ -49,14 +47,14 @@ public partial class SEUResource
     internal void Use()
     {
         m_RefCount++;
-      
+#if SEU_DEBUG
+        Debug_StackInfo.Add("[Load]" + StackTraceUtility.ExtractStackTrace());
+#endif
     }
 
     private void UnUsed()
     {
-#if SEU_DEBUG
-        Debug_StackInfo.Add("[UnLoad]" + StackTraceUtility.ExtractStackTrace());
-#endif
+
         if (m_RefCount == 0)
         {
             Debug.LogError("多次调用的 UnLoadUsedResource "+ StackTraceUtility.ExtractStackTrace());
@@ -64,6 +62,9 @@ public partial class SEUResource
         else
         {
             m_RefCount--;
+#if SEU_DEBUG
+            Debug_StackInfo.Add("[UnLoad]" + StackTraceUtility.ExtractStackTrace());
+#endif
             if (m_RefCount == 0)
             {
                 if(m_Pool != null)
@@ -89,8 +90,7 @@ public partial class SEUResource
 
     protected virtual void ReleaseResource()
     {
-       // Debug.Log(GetType()+" unload ");
-   
+    
     }
 
     protected virtual void LoadAsset() 
@@ -126,6 +126,7 @@ public partial class SEUResource
     {
         return path + type.ToString();
     }
+
     protected void LogResult()
     {
         if (m_Asset == null)
@@ -138,6 +139,7 @@ public partial class SEUResource
         }
         
     }
+
     static private void UnLoadResource(SEUResource resource)
     {
         if (resource != null)
@@ -145,61 +147,7 @@ public partial class SEUResource
             resource.UnUsed();
         }
     }
-
-    static private void InstantiateAsset(int assetCode, int code)
-    {
-        SEUResource refResource = null;
-       
-        m_AssetRefSEUResource.TryGetValue(assetCode, out refResource);
-        if (refResource == null)
-        {
-            m_InstantiateRefSEUResource.TryGetValue(assetCode, out refResource);
-        }
-        if (refResource != null)
-        {
-            if (!m_InstantiateRefSEUResource.ContainsKey(code))
-            {
-                m_InstantiateRefSEUResource.Add(code, refResource);
-               
-            }
-            refResource.Use();
-        }
-        else
-        {
-            Debug.LogError("SEUResource Instantiate Object ,But the Object  is not in ref system " + StackTraceUtility.ExtractStackTrace());
-        }
-    }
-
-    static private bool TryDestoryObject(Object asset, bool isAsset)
-    {
-        int code = asset.GetInstanceID();
-        Dictionary<int, SEUResource> record = null;
-        if (isAsset)
-        {
-            record = m_AssetRefSEUResource;
-        }
-        else
-        {
-            record = m_InstantiateRefSEUResource;
-        }
-        SEUResource refResource = null;
-        record.TryGetValue(code, out refResource);
-        if (refResource != null)
-        {
-            UnLoadResource(refResource);
-            if (refResource.refCount == 0)
-            {
-                m_AssetRefSEUResource.Remove(code);
-            }
-            if (isAsset == false)
-            {
-                Object.Destroy(asset);
-            }
-            return true;
-        }
-        return false;
-    }
-
+ 
     static private SEUResource _Load(string path, System.Type type)
     {
         path = path.ToLower();
@@ -583,22 +531,22 @@ public partial class SEUResource
 
         static SEUResourcePool()
         {
-            Debug_SEUPoolObject = new GameObject("SEUPool");
+            Debug_SEUPoolObject = new GameObject("_[SEUPool]_");
             GameObject.DontDestroyOnLoad(Debug_SEUPoolObject);
 
-            Debug_ResourcesLoadObject = new GameObject("ResourcesLoad");
+            Debug_ResourcesLoadObject = new GameObject("_[ResourcesLoad]_");
             Debug_ResourcesLoadObject.transform.SetParent(Debug_SEUPoolObject.transform);
 
-            Debug_AssetsObject = new GameObject("Assets");
+            Debug_AssetsObject = new GameObject("_[Assets]");
             Debug_AssetsObject.transform.SetParent(Debug_ResourcesLoadObject.transform);
 
-            Debug_AssetBundleLoadObject = new GameObject("AssetBundleLoad");
+            Debug_AssetBundleLoadObject = new GameObject("_[AssetBundleLoad]_");
             Debug_AssetBundleLoadObject.transform.SetParent(Debug_SEUPoolObject.transform);
 
-            Debug_AssetBundlesObject = new GameObject("AssetBundles");
+            Debug_AssetBundlesObject = new GameObject("_[AssetBundles]_");
             Debug_AssetBundlesObject.transform.SetParent(Debug_AssetBundleLoadObject.transform);
 
-            Debug_AssetsObjectLoadByBundles = new GameObject("Assets");
+            Debug_AssetsObjectLoadByBundles = new GameObject("_[Assets]_");
             Debug_AssetsObjectLoadByBundles.transform.SetParent(Debug_AssetBundleLoadObject.transform);
 
         }
@@ -794,9 +742,7 @@ public partial class SEUResource
                 resource.LoadAsset();
             }
             resource.Use();
-#if SEU_DEBUG
-            resource.Debug_MarkStackInfo();
-#endif
+
             return resource;
         }
 
@@ -822,9 +768,7 @@ public partial class SEUResource
                 PushResource(resource);
             }
             resource.Use();
-#if SEU_DEBUG
-            resource.Debug_MarkStackInfo();
-#endif
+
             return resource.SendLoadAsyncRequest(callback);
         }
 
@@ -958,12 +902,108 @@ public partial class SEUResource
         
     }
 
+    private class SEUObjectPool
+    {
+        private Dictionary<int, SEUResource> m_AssetRefSEUResource = new Dictionary<int, SEUResource>();
+        private Dictionary<int, SEUResource> m_InstantiateRefSEUResource = new Dictionary<int, SEUResource>();
+
+        internal void  AttachAssetToInstance(int assetCode, int code)
+        {
+            SEUResource refResource = null;
+
+            m_AssetRefSEUResource.TryGetValue(assetCode, out refResource);
+            if (refResource == null)
+            {
+                m_InstantiateRefSEUResource.TryGetValue(assetCode, out refResource);
+            }
+            if (refResource != null)
+            {
+                if (!m_InstantiateRefSEUResource.ContainsKey(code))
+                {
+                    m_InstantiateRefSEUResource.Add(code, refResource);
+
+                }
+                refResource.Use();
+            }
+            else
+            {
+                Debug.LogError("SEUResource Instantiate Object ,But the Object  is not in ref system " + StackTraceUtility.ExtractStackTrace());
+            }
+        }
+
+        internal  bool TryDestoryObject(Object asset, bool isAsset)
+        {
+            int code = asset.GetInstanceID();
+            Dictionary<int, SEUResource> record = null;
+            if (isAsset)
+            {
+                record = m_AssetRefSEUResource;
+            }
+            else
+            {
+                record = m_InstantiateRefSEUResource;
+            }
+            SEUResource refResource = null;
+            record.TryGetValue(code, out refResource);
+            if (refResource != null)
+            {       
+                if (refResource.m_RefCount == 0)
+                {
+                    record.Remove(code);
+                }
+                if (isAsset == false)
+                {
+                    Object.Destroy(asset);
+                }
+                UnLoadResource(refResource);
+                return true;
+            }
+            return false;
+        }
+
+        internal Object PushResource(SEUResource resource, bool isAsset)
+        {
+            Object asset = null;
+            if (resource != null)
+            {
+                Dictionary<int, SEUResource> record = null;
+                if (isAsset)
+                {
+                    record = m_AssetRefSEUResource;
+                }
+                else
+                {
+                    record = m_InstantiateRefSEUResource;
+                }
+                if (resource.asset != null)
+                {
+                    int code = resource.asset.GetInstanceID();
+                    if (!record.ContainsKey(code))
+                    {
+                        record.Add(code, resource);
+                    }
+                    asset = resource.asset;
+                }
+                else
+                {
+                    UnLoadResource(resource);
+                }
+            }
+            return asset;
+        }
+
+      
+
+    }
+
     static SEUResourcePool m_ResourcePool;
+    static SEUObjectPool   m_ObjectPool;
 
     static SEUResource()
     {
         m_ResourcePool = new SEUResourcePool();
         m_ResourcePool.InitPool("defualt", SEULoaderType.RESOURCE);
+        m_ObjectPool = new SEUObjectPool();
     }
 }
 

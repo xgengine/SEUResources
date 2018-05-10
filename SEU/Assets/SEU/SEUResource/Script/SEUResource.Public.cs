@@ -29,7 +29,7 @@ public partial class SEUResource{
         if(asset != null)
         {
             obj = Object.Instantiate<T>(asset as T);
-            InstantiateAsset(asset.GetInstanceID(), obj.GetInstanceID());
+            m_ObjectPool.AttachAssetToInstance(asset.GetInstanceID(), obj.GetInstanceID());
         }
         else
         {
@@ -43,7 +43,7 @@ public partial class SEUResource{
         if (asset != null)
         {
             obj = Object.Instantiate(asset);
-            InstantiateAsset(asset.GetInstanceID(), obj.GetInstanceID());
+            m_ObjectPool.AttachAssetToInstance(asset.GetInstanceID(), obj.GetInstanceID());
         }
         else
         {
@@ -57,13 +57,21 @@ public partial class SEUResource{
         if (asset != null)
         {
             obj = Object.Instantiate(asset,postion,quaternion);
-            InstantiateAsset(asset.GetInstanceID(), obj.GetInstanceID());
+            m_ObjectPool.AttachAssetToInstance(asset.GetInstanceID(), obj.GetInstanceID());
         }
         else
         {
             Debug.LogError("[SEUResource] Instantiate Object But The Object is NULL");
         }
         return obj;
+    }
+
+    static public T LoadAndInstantiate<T>(string path) where T:Object
+    {
+        Object asset = Load<T>(path);
+        T insObj = Instantiate<T>(asset);
+        DestoryObject(asset);
+        return insObj;
     }
 
     static public T Load<T>(string path) where T : Object
@@ -79,7 +87,7 @@ public partial class SEUResource{
     static public Object Load(string path, System.Type type)
     {
         SEUResource resource = _Load(path, type);
-        return PushResource(resource, true);
+        return m_ObjectPool.PushResource(resource, true);
     }
 
     static public Request LoadAsync<T>(string path) where T : Object
@@ -91,7 +99,7 @@ public partial class SEUResource{
     {
         Request request = _LoadAsync(path,type,
             (resource) => {
-                PushResource(resource, true);
+                m_ObjectPool.PushResource(resource, true);
             }
         );
         return request;
@@ -103,43 +111,12 @@ public partial class SEUResource{
         return LoadAsync(path, typeof(UnityEngine.Object));
     }
 
-    static private Object PushResource(SEUResource resource, bool isAsset) 
-    {
-        Object asset = null;
-        if (resource != null)
-        {
-            Dictionary<int, SEUResource> record = null;
-            if (isAsset)
-            {
-                record = m_AssetRefSEUResource;
-            }
-            else
-            {
-                record = m_InstantiateRefSEUResource;
-            }
-            if (resource.asset != null)
-            {
-                int code = resource.asset.GetInstanceID();
-                if (!record.ContainsKey(code))
-                {
-                    record.Add(code, resource);
-                }
-                asset = resource.asset;
-            }
-            else
-            {
-                resource.UnUsed();
-            }
-        }
-        return asset;
-    }
-
     static public void DestoryObject(Object asset)
     {
         if (asset != null)
         {
            
-            if ((TryDestoryObject(asset, true) || TryDestoryObject(asset, false)) == false)
+            if ((m_ObjectPool.TryDestoryObject(asset, true) || m_ObjectPool.TryDestoryObject(asset, false)) == false)
             {
                 Debug.LogError("[SEUResource] Try Destory Object ,But it not in Ref System " + StackTraceUtility.ExtractStackTrace());
             }
