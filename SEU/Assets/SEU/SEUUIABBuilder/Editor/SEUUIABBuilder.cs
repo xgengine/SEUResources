@@ -14,16 +14,12 @@ public class UIABBuilder {
         {
             Directory.CreateDirectory(assetbundlesPath);
         }      
-        AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(assetbundlesPath, BuildAssetBundleOptions.UncompressedAssetBundle, EditorUserBuildSettings.activeBuildTarget);
+        BuildPipeline.BuildAssetBundles(assetbundlesPath, BuildAssetBundleOptions.UncompressedAssetBundle, EditorUserBuildSettings.activeBuildTarget);
     }
 
     static void BuildUI()
     {
         string[] resultGUIDs = AssetDatabase.FindAssets("t:Prefab", new string[] { UIViewPath });
-
-
-
-
         for(int i = 0; i <resultGUIDs.Length; i++)
         {
             string resultPath = AssetDatabase.GUIDToAssetPath(resultGUIDs[i]);

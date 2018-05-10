@@ -2,6 +2,9 @@
 using UnityEngine;
 using System.Collections;
 using System.IO;
+/// <summary>
+/// SEUResource 对Unity资源加载进行封装、保持和 Resources 资源加载接口形式，并对资源进行引用计数的管理
+/// </summary>
 public partial class SEUResource{
     public Object asset
     {
@@ -28,7 +31,20 @@ public partial class SEUResource{
     static public SEUResource Load(string path)
     {
         path = path.ToLower();
-        SEUResource result = m_ResourcePool.Load(path);
+        SEUResource result = m_ResourcePool.Load(path,typeof(UnityEngine.Object));
+        return result;
+    }
+
+    static public SEUResource Load(string path,System.Type type)
+    {
+        path = path.ToLower();
+        SEUResource result = m_ResourcePool.Load(path,type);
+        return result;
+    }
+    static public SEUResource Load<T>(string path) where T: Object
+    {
+        path = path.ToLower();
+        SEUResource result = m_ResourcePool.Load(path, typeof(T));
 
         return result;
     }
@@ -36,7 +52,17 @@ public partial class SEUResource{
     static public Request LoadAsyn(string path)
     {
         path = path.ToLower();
-        return m_ResourcePool.LoadAsyn(path);
+        return m_ResourcePool.LoadAsyn(path,typeof(UnityEngine.Object));
+    }
+    static public Request LoadAsyn(string path,System.Type type)
+    {
+        path = path.ToLower();
+        return m_ResourcePool.LoadAsyn(path, type);
+    }
+    static public Request LoadAsyn<T>(string path)
+    {
+        path = path.ToLower();
+        return m_ResourcePool.LoadAsyn(path, typeof(T));
     }
 
     static public void UnLoadResource(SEUResource resource)
@@ -45,7 +71,10 @@ public partial class SEUResource{
         resource.Debug_StackInfo.Add("[UnLoad]" + StackTraceUtility.ExtractStackTrace());
 
 #endif
-        resource.UnUsed();
+        if(resource != null)
+        {
+            resource.UnUsed();
+        }       
     }
 
     public class Request : CustomYieldInstruction
@@ -78,6 +107,7 @@ public partial class SEUResource{
         }
     }
 }
+
 public enum SEULoaderType
 {
     RESOURCE,
