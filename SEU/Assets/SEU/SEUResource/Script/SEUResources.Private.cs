@@ -4,7 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 
-public partial class SEUResource
+public partial class SEUResources
 {
     protected Object m_Asset = null;
     protected Object asset
@@ -29,11 +29,11 @@ public partial class SEUResource
 
     private int m_RefCount = 0;
 
-    private SEUResourcePool m_Pool = null;
+    private SEUResourcesPool m_Pool = null;
 
-    protected List<SEUResource> m_DependenceResources = new List<SEUResource>();
+    protected List<SEUResources> m_DependenceResources = new List<SEUResources>();
 
-    protected SEUResource(string path,System.Type type)
+    protected SEUResources(string path,System.Type type)
     {
         m_LoadPath = path;
         m_Type = type;
@@ -48,7 +48,7 @@ public partial class SEUResource
     {
         m_RefCount++;
 #if SEU_DEBUG
-        Debug_StackInfo.Add("[Load]" + StackTraceUtility.ExtractStackTrace());
+        Debug_StackInfo.Add("[Use]" + StackTraceUtility.ExtractStackTrace());
 #endif
     }
 
@@ -63,7 +63,7 @@ public partial class SEUResource
         {
             m_RefCount--;
 #if SEU_DEBUG
-            Debug_StackInfo.Add("[UnLoad]" + StackTraceUtility.ExtractStackTrace());
+            Debug_StackInfo.Add("[UnUse]" + StackTraceUtility.ExtractStackTrace());
 #endif
             if (m_RefCount == 0)
             {
@@ -72,7 +72,7 @@ public partial class SEUResource
                     m_Pool.PopResource(this);
                     for (int i = 0; i < m_DependenceResources.Count; i++)
                     {
-                        SEUResource.UnLoadResource(m_DependenceResources[i]);
+                        SEUResources.UnLoadResource(m_DependenceResources[i]);
                     }
                 }
                 else
@@ -83,7 +83,7 @@ public partial class SEUResource
         }    
     }
 
-    private void AttachPool(SEUResourcePool pool)
+    private void AttachPool(SEUResourcesPool pool)
     {
         m_Pool = pool;
     }
@@ -101,7 +101,7 @@ public partial class SEUResource
         yield break;
     }
 
-    protected Request SendLoadAsyncRequest(System.Action<SEUResource> callback =null)
+    protected Request SendLoadAsyncRequest(System.Action<SEUResources> callback =null)
     {
         if(m_LoadAysncRequest == null)
         {
@@ -110,7 +110,7 @@ public partial class SEUResource
         return m_LoadAysncRequest;
     }
 
-    protected void AddDependenceResources(SEUResource resource)
+    protected void AddDependenceResources(SEUResources resource)
     {
         if(m_DependenceResources.Contains(resource) == false)
         {
@@ -140,7 +140,7 @@ public partial class SEUResource
         
     }
 
-    static private void UnLoadResource(SEUResource resource)
+    static private void UnLoadResource(SEUResources resource)
     {
         if (resource != null)
         {
@@ -148,14 +148,14 @@ public partial class SEUResource
         }
     }
  
-    static private SEUResource _Load(string path, System.Type type)
+    static private SEUResources _Load(string path, System.Type type)
     {
         path = path.ToLower();
-        SEUResource result = m_ResourcePool.Load(path, type);
+        SEUResources result = m_ResourcePool.Load(path, type);
         return result;
     }
 
-    static private Request _LoadAsync(string path, System.Type type, System.Action<SEUResource> callback = null)
+    static private Request _LoadAsync(string path, System.Type type, System.Action<SEUResources> callback = null)
     {
         path = path.ToLower();
         return m_ResourcePool.LoadAsyn(path, type,callback);
@@ -169,7 +169,7 @@ public partial class SEUResource
             return m_RefCount;
         }
     }
-    public List<SEUResource> dependenceResources
+    public List<SEUResources> dependenceResources
     {
         get
         {
@@ -180,7 +180,7 @@ public partial class SEUResource
     public void DebugCreateObject()
     {
         DebugObject = new GameObject(m_LoadPath);
-        SEUResourceDebug debugObject = DebugObject.AddComponent<SEUResourceDebug>();
+        SEUResourcesDebug debugObject = DebugObject.AddComponent<SEUResourcesDebug>();
         debugObject.resource = this;
     }
 
@@ -195,7 +195,7 @@ public partial class SEUResource
     /// <summary>
     /// 采用资源从中 Resources 加载方式的资源类
     /// </summary>
-    private class SEUNormalResource : SEUResource
+    private class SEUNormalResource : SEUResources
     {
         public SEUNormalResource(string path,System.Type type) : base(path,type)
         {
@@ -219,14 +219,14 @@ public partial class SEUResource
     /// <summary>
     /// 采用资源从 AssetBundle中加载方式的资源类
     /// </summary>
-    private class SEUResourceLoadedFromBundle : SEUResource
+    private class SEUResourcesLoadedFromBundle : SEUResources
     { 
-        public SEUResourceLoadedFromBundle(string path, System.Type type) : base(path, type)
+        public SEUResourcesLoadedFromBundle(string path, System.Type type) : base(path, type)
         {
         }
         protected override void LoadAsset()
         {
-            SEUResource bundleRes = m_Pool.LoadAssetBundle(m_LoadPath,true);
+            SEUResources bundleRes = m_Pool.LoadAssetBundle(m_LoadPath,true);
             AssetBundle bundle = bundleRes.asset as AssetBundle;
             if (bundle != null)
             {
@@ -243,7 +243,7 @@ public partial class SEUResource
         {
             Request request = m_Pool.LoadAssetBundleAsyn(m_LoadPath,true);
             yield return request;
-            SEUResource bundleRes = request.resource;
+            SEUResources bundleRes = request.resource;
             AssetBundle bundle = bundleRes.asset as AssetBundle;
             if (bundle != null)
             {
@@ -262,7 +262,7 @@ public partial class SEUResource
     /// <summary>
     /// Manifest AssetBundle 资源对象 从该对象中可以获取AB包的依赖
     /// </summary>
-    private class SEUMenifestBundleResource : SEUResourceLoadedFromBundle
+    private class SEUMenifestBundleResource : SEUResourcesLoadedFromBundle
     {
         AssetBundle bundle;
         public SEUMenifestBundleResource(string path, System.Type type) : base(path, type)
@@ -309,7 +309,7 @@ public partial class SEUResource
     /// <summary>
     /// AssetBundle 资源类
     /// </summary>
-    private class SEUABResource : SEUResourceLoadedFromBundle
+    private class SEUABResource : SEUResourcesLoadedFromBundle
     {
 
         public SEUABResource(string path, System.Type type) : base(path, type)
@@ -328,7 +328,7 @@ public partial class SEUResource
                 Debug.LogWarning("[异步冲突]");
             }
 
-            SEUResource manifestRes = m_Pool.LoadBundleManifest(m_LoadPath);          
+            SEUResources manifestRes = m_Pool.LoadBundleManifest(m_LoadPath);          
             if (manifestRes != null&& manifestRes.asset != null)
             {
                 AddDependenceResources(manifestRes);
@@ -340,7 +340,7 @@ public partial class SEUResource
                     {
                         for (int i = 0; i < dependenciesPaths.Length; i++)
                         {
-                            SEUResource depRes = m_Pool.LoadAssetBundle(dependenciesPaths[i]);
+                            SEUResources depRes = m_Pool.LoadAssetBundle(dependenciesPaths[i]);
                             AddDependenceResources(depRes);
                         }
                     }
@@ -362,7 +362,7 @@ public partial class SEUResource
             {
                 Debug.LogWarning("[同步冲突] 已经处理");
             }
-            SEUResource manifestRes = m_Pool.LoadBundleManifest(m_LoadPath);          
+            SEUResources manifestRes = m_Pool.LoadBundleManifest(m_LoadPath);          
             if (manifestRes != null && manifestRes.asset != null)
             {
                 AddDependenceResources(manifestRes);
@@ -376,7 +376,7 @@ public partial class SEUResource
                         {
                             Request request = m_Pool.LoadAssetBundleAsyn(dependenciesPaths[i]);
                             yield return request;
-                            SEUResource depRes = request.resource;
+                            SEUResources depRes = request.resource;
                             AddDependenceResources(depRes);
                         }
                     }
@@ -396,7 +396,7 @@ public partial class SEUResource
         }
     }
 
-    private class SEUResourcePool
+    private class SEUResourcesPool
     {
         class SEULoaderResourceGroupPooolRegister
         {
@@ -405,7 +405,7 @@ public partial class SEUResource
                 internal string name;
                 internal List<PathNode> m_ChildNode = new List<PathNode>();
                 internal int poolCode = -1;
-                internal SEUResourcePool Register(string[] folders, int index = 0)
+                internal SEUResourcesPool Register(string[] folders, int index = 0)
                 {
                     string nodeName = folders[index];
                     PathNode cnode = null;
@@ -421,7 +421,7 @@ public partial class SEUResource
                         if (folders.Length - 1 == index)
                         {
                             PathNode endNode = new PathNode();
-                            SEUResourcePool pool = new SEUResourcePool();
+                            SEUResourcesPool pool = new SEUResourcesPool();
                             endNode.poolCode = pool.GetHashCode();
                             endNode.name = folders[index];
                             m_ChildNode.Add(endNode);
@@ -487,11 +487,11 @@ public partial class SEUResource
             {
                 Root = new PathNode();
             }
-            internal SEUResourcePool ResisterGroupPath(string path)
+            internal SEUResourcesPool ResisterGroupPath(string path)
             {
 
                 string[] folders = path.Split(new string[] { "/" }, System.StringSplitOptions.None);
-                SEUResourcePool pool = Root.Register(folders);
+                SEUResourcesPool pool = Root.Register(folders);
                 return pool;
 
             }
@@ -502,12 +502,12 @@ public partial class SEUResource
             }
         }
 
-        private Dictionary<int, SEUResourcePool> m_ResourceGroupPool = new Dictionary<int, SEUResourcePool>();
-        private Dictionary<string, SEUResource> m_Resources = new Dictionary<string, SEUResource>();
-        private static Dictionary<string, SEUResource> m_AssetBundles = new Dictionary<string, SEUResource>();
+        private Dictionary<int, SEUResourcesPool> m_ResourceGroupPool = new Dictionary<int, SEUResourcesPool>();
+        private Dictionary<string, SEUResources> m_Resources = new Dictionary<string, SEUResources>();
+        private static Dictionary<string, SEUResources> m_AssetBundles = new Dictionary<string, SEUResources>();
         private SEULoaderResourceGroupPooolRegister m_GroupPoolRegister;
         private SEULoaderType m_LoaderType;
-        private SEUResourceUnLoadType m_UnloadType;
+        private SEUResourcesUnLoadType m_UnloadType;
         private IPathConverter m_ResourceToBundlePathConverter;
         private IPathProvider m_ManifestPathProvider;
         private IPathConverter m_BundleFilePathConverter;
@@ -529,9 +529,9 @@ public partial class SEUResource
 
 
 
-        static SEUResourcePool()
+        static SEUResourcesPool()
         {
-            Debug_SEUPoolObject = new GameObject("_[SEUPool]_");
+            Debug_SEUPoolObject = new GameObject("_[SEUAssetPool]_");
             GameObject.DontDestroyOnLoad(Debug_SEUPoolObject);
 
             Debug_ResourcesLoadObject = new GameObject("_[ResourcesLoad]_");
@@ -551,7 +551,7 @@ public partial class SEUResource
 
         }
 #endif
-        public SEUResourcePool()
+        public SEUResourcesPool()
         {
             m_GroupPoolRegister = new SEULoaderResourceGroupPooolRegister();
         }
@@ -567,7 +567,7 @@ public partial class SEUResource
         internal void InitPool(
             string groupPath,
             SEULoaderType loaderType,
-            SEUResourceUnLoadType unLoadType = SEUResourceUnLoadType.REFCOUNT_ZERO,
+            SEUResourcesUnLoadType unLoadType = SEUResourcesUnLoadType.REFCOUNT_ZERO,
             IPathProvider manifestBunderPathProvider = null,
             IPathConverter resToBundlerPathConverter = null,
             SEUBundleLoader bundleLoader = null
@@ -610,10 +610,10 @@ public partial class SEUResource
 #endif
         }
 
-        private void PushResource(SEUResource resource)
+        private void PushResource(SEUResources resource)
         {
             string resGUID = resource.GUID();
-            Dictionary<string, SEUResource> container = null;
+            Dictionary<string, SEUResources> container = null;
             if (resource is SEUABResource || resource is SEUMenifestBundleResource)
             {
                 container = m_AssetBundles;
@@ -646,10 +646,10 @@ public partial class SEUResource
             }
         }
 
-        internal void PopResource(SEUResource resource)
+        internal void PopResource(SEUResources resource)
         {
             string resGUI = resource.GUID();
-            Dictionary<string, SEUResource> container = null;
+            Dictionary<string, SEUResources> container = null;
             if (resource is SEUABResource || resource is SEUMenifestBundleResource)
             {
                 container = m_AssetBundles;
@@ -661,7 +661,7 @@ public partial class SEUResource
 
             if (container.ContainsKey(resGUI))
             {
-                if (m_UnloadType == SEUResourceUnLoadType.REFCOUNT_ZERO)
+                if (m_UnloadType == SEUResourcesUnLoadType.REFCOUNT_ZERO)
                 {
                     container.Remove(resGUI);
                     resource.ReleaseResource();
@@ -676,10 +676,10 @@ public partial class SEUResource
             }
         }
 
-        private SEUResourcePool GetGroupPool(string path)
+        private SEUResourcesPool GetGroupPool(string path)
         {
             int id = m_GroupPoolRegister.GetGroupPoolCode(path);
-            SEUResourcePool pool = null;
+            SEUResourcesPool pool = null;
             if (id == -1)
             {
                 pool = this;
@@ -695,9 +695,9 @@ public partial class SEUResource
             return pool;
         }
 
-        internal SEUResource Load(string path, System.Type type)
+        internal SEUResources Load(string path, System.Type type)
         {
-            SEUResourcePool pool = GetGroupPool(path);
+            SEUResourcesPool pool = GetGroupPool(path);
             if (pool != null)
             {
                 return pool.LoadInternal(path,type);
@@ -705,9 +705,9 @@ public partial class SEUResource
             return null;
         }
 
-        internal Request LoadAsyn(string path, System.Type type ,System.Action<SEUResource> callback =null)
+        internal Request LoadAsyn(string path, System.Type type ,System.Action<SEUResources> callback =null)
         {
-            SEUResourcePool pool = GetGroupPool(path);
+            SEUResourcesPool pool = GetGroupPool(path);
             if (pool != null)
             {
                 return pool.LoadAsynInternal(path, type,callback);
@@ -715,9 +715,9 @@ public partial class SEUResource
             return null; ;
         }
 
-        private SEUResource LoadInternal(string path,System.Type type)
+        private SEUResources LoadInternal(string path,System.Type type)
         {
-            SEUResource resource = null;
+            SEUResources resource = null;
             string resGUID = ToResGUID(path, type);
             if (m_Resources.ContainsKey(resGUID))
             {
@@ -731,7 +731,7 @@ public partial class SEUResource
                         resource = new SEUNormalResource(path,type);
                         break;
                     case SEULoaderType.AB:
-                        resource = new SEUResourceLoadedFromBundle(path,type);
+                        resource = new SEUResourcesLoadedFromBundle(path,type);
                         break;
                 }
                 PushResource(resource);
@@ -746,9 +746,9 @@ public partial class SEUResource
             return resource;
         }
 
-        private Request LoadAsynInternal(string path,System.Type type,System.Action<SEUResource> callback)
+        private Request LoadAsynInternal(string path,System.Type type,System.Action<SEUResources> callback)
         {
-            SEUResource resource = null;
+            SEUResources resource = null;
             string resGUID = ToResGUID(path, type);
             if (m_Resources.ContainsKey(resGUID))
             {
@@ -762,7 +762,7 @@ public partial class SEUResource
                         resource = new SEUNormalResource(path,type);
                         break;
                     case SEULoaderType.AB:
-                        resource = new SEUResourceLoadedFromBundle(path,type);
+                        resource = new SEUResourcesLoadedFromBundle(path,type);
                         break;
                 }
                 PushResource(resource);
@@ -772,7 +772,7 @@ public partial class SEUResource
             return resource.SendLoadAsyncRequest(callback);
         }
 
-        internal SEUResource LoadAssetBundle(string path, bool isNeedConvertBundlePath = false)
+        internal SEUResources LoadAssetBundle(string path, bool isNeedConvertBundlePath = false)
         {
             string bundlePath = path;
             if (isNeedConvertBundlePath)
@@ -781,7 +781,7 @@ public partial class SEUResource
             }
             System.Type type = typeof(AssetBundle);
             string resGUID = ToResGUID(bundlePath ,type);
-            SEUResource resource = null;
+            SEUResources resource = null;
             if (m_AssetBundles.ContainsKey(resGUID))
             {
                 resource = m_AssetBundles[resGUID];
@@ -809,7 +809,7 @@ public partial class SEUResource
             }
             System.Type type = typeof(AssetBundle);
             string resGUID = ToResGUID(bundlePath, type);
-            SEUResource resource = null;
+            SEUResources resource = null;
             if (m_AssetBundles.ContainsKey(resGUID))
             {
                 resource = m_AssetBundles[resGUID];
@@ -822,12 +822,12 @@ public partial class SEUResource
             return resource.SendLoadAsyncRequest();
         }
 
-        internal SEUResource LoadBundleManifest(string path)
+        internal SEUResources LoadBundleManifest(string path)
         {
             string manifestPath = m_ManifestPathProvider.GetPath();
             System.Type type = typeof(AssetBundleManifest);
             string resGUID = ToResGUID(manifestPath, type);
-            SEUResource resource = null;
+            SEUResources resource = null;
             if (m_AssetBundles.ContainsKey(resGUID))
             {
                 resource = m_AssetBundles[resGUID];
@@ -850,7 +850,7 @@ public partial class SEUResource
             string manifestPath = m_ManifestPathProvider.GetPath();
             System.Type type = typeof(UnityEngine.Object);
             string resGUID = ToResGUID(manifestPath,type);
-            SEUResource resource = null;
+            SEUResources resource = null;
             if (m_AssetBundles.ContainsKey(resGUID))
             {
                 resource = m_AssetBundles[resGUID];
@@ -874,12 +874,12 @@ public partial class SEUResource
         internal void ResisterGroupPath(
             string groupPath,
             SEULoaderType loaderType,
-            SEUResourceUnLoadType unLoadType = SEUResourceUnLoadType.REFCOUNT_ZERO,
+            SEUResourcesUnLoadType unLoadType = SEUResourcesUnLoadType.REFCOUNT_ZERO,
             IPathProvider manifestBunderPathProvider = null,
             IPathConverter resToBundlerPathConverter = null
             )
         {
-            SEUResourcePool pool = m_GroupPoolRegister.ResisterGroupPath(groupPath);
+            SEUResourcesPool pool = m_GroupPoolRegister.ResisterGroupPath(groupPath);
             if (pool != null)
             {
                 pool.InitPool(groupPath, loaderType, unLoadType, manifestBunderPathProvider, resToBundlerPathConverter);
@@ -887,7 +887,7 @@ public partial class SEUResource
             AddGroupPool(pool);
         }
 
-        private void AddGroupPool(SEUResourcePool pool)
+        private void AddGroupPool(SEUResourcesPool pool)
         {
             if (pool != null)
             {
@@ -904,46 +904,63 @@ public partial class SEUResource
 
     private class SEUObjectPool
     {
-        private Dictionary<int, SEUResource> m_AssetRefSEUResource = new Dictionary<int, SEUResource>();
-        private Dictionary<int, SEUResource> m_InstantiateRefSEUResource = new Dictionary<int, SEUResource>();
+        private Dictionary<int, SEUResources> m_AssetRefSEUResources = new Dictionary<int, SEUResources>();
+        private Dictionary<int, SEUResources> m_InstantiateRefSEUResources = new Dictionary<int, SEUResources>();
 
+#if SEU_DEBUG
+        GameObject Debug_SEUObjectPoolObject;
+
+        internal SEUObjectPool()
+        {
+            Debug_SEUObjectPoolObject = new GameObject("_[SEUObjectPool]_");
+            GameObject.DontDestroyOnLoad(Debug_SEUObjectPoolObject);
+        }
+#endif
         internal void  AttachAssetToInstance(int assetCode, int code)
         {
-            SEUResource refResource = null;
+            SEUResources refResource = null;
 
-            m_AssetRefSEUResource.TryGetValue(assetCode, out refResource);
+            m_AssetRefSEUResources.TryGetValue(assetCode, out refResource);
             if (refResource == null)
             {
-                m_InstantiateRefSEUResource.TryGetValue(assetCode, out refResource);
+                m_InstantiateRefSEUResources.TryGetValue(assetCode, out refResource);
             }
             if (refResource != null)
             {
-                if (!m_InstantiateRefSEUResource.ContainsKey(code))
+                if (!m_InstantiateRefSEUResources.ContainsKey(code))
                 {
-                    m_InstantiateRefSEUResource.Add(code, refResource);
+                    m_InstantiateRefSEUResources.Add(code, refResource);
 
                 }
                 refResource.Use();
             }
             else
             {
-                Debug.LogError("SEUResource Instantiate Object ,But the Object  is not in ref system " + StackTraceUtility.ExtractStackTrace());
+                Debug.LogError("SEUResources Instantiate Object ,But the Object  is not in ref system " + StackTraceUtility.ExtractStackTrace());
+            }
+        }
+
+        internal void DestoryObject(Object asset)
+        {
+            if ((TryDestoryObject(asset, true) ||TryDestoryObject(asset, false)) == false)
+            {
+                Debug.LogError("[SEUResources] Try Destory Object ,But it not in Ref System " + StackTraceUtility.ExtractStackTrace());
             }
         }
 
         internal  bool TryDestoryObject(Object asset, bool isAsset)
         {
             int code = asset.GetInstanceID();
-            Dictionary<int, SEUResource> record = null;
+            Dictionary<int, SEUResources> record = null;
             if (isAsset)
             {
-                record = m_AssetRefSEUResource;
+                record = m_AssetRefSEUResources;
             }
             else
             {
-                record = m_InstantiateRefSEUResource;
+                record = m_InstantiateRefSEUResources;
             }
-            SEUResource refResource = null;
+            SEUResources refResource = null;
             record.TryGetValue(code, out refResource);
             if (refResource != null)
             {       
@@ -961,19 +978,24 @@ public partial class SEUResource
             return false;
         }
 
-        internal Object PushResource(SEUResource resource, bool isAsset)
+        internal void PopResource(bool isAsset)
+        {
+
+        }
+
+        internal Object PushResource(SEUResources resource, bool isAsset)
         {
             Object asset = null;
             if (resource != null)
             {
-                Dictionary<int, SEUResource> record = null;
+                Dictionary<int, SEUResources> record = null;
                 if (isAsset)
                 {
-                    record = m_AssetRefSEUResource;
+                    record = m_AssetRefSEUResources;
                 }
                 else
                 {
-                    record = m_InstantiateRefSEUResource;
+                    record = m_InstantiateRefSEUResources;
                 }
                 if (resource.asset != null)
                 {
@@ -992,16 +1014,14 @@ public partial class SEUResource
             return asset;
         }
 
-      
-
     }
 
-    static SEUResourcePool m_ResourcePool;
+    static SEUResourcesPool m_ResourcePool;
     static SEUObjectPool   m_ObjectPool;
 
-    static SEUResource()
+    static SEUResources()
     {
-        m_ResourcePool = new SEUResourcePool();
+        m_ResourcePool = new SEUResourcesPool();
         m_ResourcePool.InitPool("defualt", SEULoaderType.RESOURCE);
         m_ObjectPool = new SEUObjectPool();
     }

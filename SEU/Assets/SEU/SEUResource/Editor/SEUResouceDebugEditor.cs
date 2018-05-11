@@ -2,19 +2,19 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections;
-[CustomEditor(typeof(SEUResourceDebug))]
+[CustomEditor(typeof(SEUResourcesDebug))]
 public class SEUResouceDebugEditor : Editor{
 
     public override void OnInspectorGUI()
     {
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            SEUResourceDebug debugObject = target as SEUResourceDebug;
+            SEUResourcesDebug debugObject = target as SEUResourcesDebug;
             var oc = GUI.color;
             GUI.color = Color.yellow;
-            EditorGUILayout.LabelField("SEUResource ["+debugObject.resource.GetType()+"]", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("SEUResources ["+debugObject.resource.GetType()+"]", EditorStyles.boldLabel);
             GUI.color = oc;
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            DrawSEUResource(debugObject.resource);
+            DrawSEUResources(debugObject.resource);
             EditorGUILayout.EndVertical();
             GUILayout.Space(10);
             
@@ -23,13 +23,13 @@ public class SEUResouceDebugEditor : Editor{
        
             for (int i = 0; i < debugObject.resource.dependenceResources.Count; i++)
             {
-                DrawSEUResource(debugObject.resource.dependenceResources[i],true);
+                DrawSEUResources(debugObject.resource.dependenceResources[i],true);
             }
             EditorGUILayout.EndVertical();
         EditorGUILayout.EndVertical();
     }
 
-    void DrawSEUResource(SEUResource res,bool showDeps =false)
+    void DrawSEUResources(SEUResources res,bool showDeps =false)
     {
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
         EditorGUILayout.LabelField(res.loadPath);
@@ -44,22 +44,22 @@ public class SEUResouceDebugEditor : Editor{
         {
             EditorGUILayout.LabelField("RefCount: " + res.refCount.ToString());
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            EditorGUILayout.LabelField("Load /UnLoad Stack Info", EditorStyles.boldLabel);
-            var loadList = res.Debug_StackInfo.FindAll((p) => p.StartsWith("[Load]"));
+            EditorGUILayout.LabelField("Use /UnUse Stack Info", EditorStyles.boldLabel);
+            var loadList = res.Debug_StackInfo.FindAll((p) => p.StartsWith("[Use]"));
            
-            EditorGUILayout.LabelField(string.Format( "Load [{0}] UnLoad[{1}]",loadList.Count,res.Debug_StackInfo.Count-loadList.Count));
+            EditorGUILayout.LabelField(string.Format( "Use [{0}] UnUse[{1}]",loadList.Count,res.Debug_StackInfo.Count-loadList.Count));
 
             Color old = GUI.color;
             for (int i = 0; i < res.Debug_StackInfo.Count; i++)
             {
                 string info = res.Debug_StackInfo[i];
-                if (info.StartsWith("[Load]"))
+                if (info.StartsWith("[Use]"))
                 {
                     GUI.color = Color.green;
                 }
                 else
                 {
-                    GUI.color = Color.red;
+                    GUI.color = Color.magenta;
                 }
                EditorGUILayout.LabelField(res.Debug_StackInfo[i],EditorStyles.textArea);
             }

@@ -4,14 +4,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 /// <summary>
-/// SEUResource 对Unity资源加载进行封装、保持和 Resources 资源加载接口形式，并对资源进行引用计数的管理
+/// SEUResources 对Unity资源加载进行封装、保持和 Resources 资源加载接口形式，并对资源进行引用计数的管理
 /// </summary>
-public partial class SEUResource{
+public partial class SEUResources{
 
     static public void ResisterGroupPath(
         string groupPath,
         SEULoaderType loaderType,
-        SEUResourceUnLoadType unLoadType = SEUResourceUnLoadType.REFCOUNT_ZERO,
+        SEUResourcesUnLoadType unLoadType = SEUResourcesUnLoadType.REFCOUNT_ZERO,
         IPathProvider manifestBunderPathProvider = null,
         IPathConverter resToBundlerPathConverter = null
         )
@@ -33,7 +33,7 @@ public partial class SEUResource{
         }
         else
         {
-            Debug.LogError("[SEUResource] Instantiate Object But The Object is NULL");
+            Debug.LogError("[SEUResources] Instantiate Object But The Object is NULL");
         }
         return obj;
     }
@@ -47,7 +47,7 @@ public partial class SEUResource{
         }
         else
         {
-            Debug.LogError("[SEUResource] Instantiate Object But The Object is NULL");
+            Debug.LogError("[SEUResources] Instantiate Object But The Object is NULL");
         }
         return obj;
     }
@@ -61,7 +61,7 @@ public partial class SEUResource{
         }
         else
         {
-            Debug.LogError("[SEUResource] Instantiate Object But The Object is NULL");
+            Debug.LogError("[SEUResources] Instantiate Object But The Object is NULL");
         }
         return obj;
     }
@@ -86,7 +86,7 @@ public partial class SEUResource{
 
     static public Object Load(string path, System.Type type)
     {
-        SEUResource resource = _Load(path, type);
+        SEUResources resource = _Load(path, type);
         return m_ObjectPool.PushResource(resource, true);
     }
 
@@ -115,11 +115,7 @@ public partial class SEUResource{
     {
         if (asset != null)
         {
-           
-            if ((m_ObjectPool.TryDestoryObject(asset, true) || m_ObjectPool.TryDestoryObject(asset, false)) == false)
-            {
-                Debug.LogError("[SEUResource] Try Destory Object ,But it not in Ref System " + StackTraceUtility.ExtractStackTrace());
-            }
+            m_ObjectPool.DestoryObject(asset);       
         }
         
     }
@@ -137,20 +133,20 @@ public partial class SEUResource{
                 return null;
             }
         }
-        private SEUResource m_Resource;
-        public SEUResource resource
+        private SEUResources m_Resource;
+        internal SEUResources resource
         {
             get
             {
                 return m_Resource;
             }
         }
-        internal Request(SEUResource resource,System.Action<SEUResource> callback =null)
+        internal Request(SEUResources resource,System.Action<SEUResources> callback =null)
         {
             m_Resource = resource;
             if (resource.asset == null)
             {
-                SEUResourceRequestRunner.SendReqest(MainLoop(callback));
+                SEUResourcesAsyncOperator.SendReqest(MainLoop(callback));
             }
             else
             {
@@ -162,7 +158,7 @@ public partial class SEUResource{
             }
            
         }
-        IEnumerator MainLoop(System.Action<SEUResource> callback =null)
+        private IEnumerator MainLoop(System.Action<SEUResources> callback =null)
         {
             yield return resource.LoadAssetAsync();
             if (callback != null)
@@ -189,7 +185,7 @@ public enum SEULoaderType
     AB,
 }
 
-public enum SEUResourceUnLoadType
+public enum SEUResourcesUnLoadType
 {
     REFCOUNT_ZERO,  //计数为零释放内存
     PERMANENT       //常驻内存
