@@ -737,6 +737,7 @@ public partial class SEUResources
                 PushResource(resource);
 
             }
+            /// 这样处理 为了同步和异步并存
             if (resource.asset == null)
             {
                 resource.LoadAsset();
@@ -908,16 +909,33 @@ public partial class SEUResources
         private Dictionary<int, SEUResources> m_InstantiateRefSEUResources = new Dictionary<int, SEUResources>();
 
 #if SEU_DEBUG
+        private Dictionary<int, GameObject> Debeg_InstantiateObjects = new Dictionary<int, GameObject>();
         GameObject Debug_SEUObjectPoolObject;
 
         internal SEUObjectPool()
         {
-            Debug_SEUObjectPoolObject = new GameObject("_[SEUObjectPool]_");
-            GameObject.DontDestroyOnLoad(Debug_SEUObjectPoolObject);
+            //Debug_SEUObjectPoolObject = new GameObject("_[SEUObjectPool]_");
+            //GameObject.DontDestroyOnLoad(Debug_SEUObjectPoolObject);
+        }
+        private void DeBug_AddInstanceObject(Object instance,SEUResources res)
+        {
+            GameObject debugObj = new GameObject(res.m_LoadPath);
+            Debeg_InstantiateObjects.Add(instance.GetInstanceID(), debugObj);
+            debugObj.transform.SetParent(Debug_SEUObjectPoolObject.transform);
+        }
+        private void DeBug_RemoveInstanceObject(Object instance)
+        {
+            GameObject debugObj =null ;
+            Debeg_InstantiateObjects.TryGetValue(instance.GetInstanceID(), out debugObj);
+            Object.Destroy(debugObj);
+
         }
 #endif
-        internal void  AttachAssetToInstance(int assetCode, int code)
+        internal void  AttachAssetToInstance(Object asset, Object instObj)
         {
+            int assetCode = asset.GetInstanceID();
+            int instanceCode = instObj.GetInstanceID();
+
             SEUResources refResource = null;
 
             m_AssetRefSEUResources.TryGetValue(assetCode, out refResource);
@@ -927,12 +945,15 @@ public partial class SEUResources
             }
             if (refResource != null)
             {
-                if (!m_InstantiateRefSEUResources.ContainsKey(code))
+                if (!m_InstantiateRefSEUResources.ContainsKey(instanceCode))
                 {
-                    m_InstantiateRefSEUResources.Add(code, refResource);
-
+                    m_InstantiateRefSEUResources.Add(instanceCode, refResource);                    
+                    refResource.Use();
                 }
-                refResource.Use();
+                else
+                {
+                    Debug.LogError("SEUResources Instantiate Objec ,But this is a ref System Error");
+                }
             }
             else
             {
@@ -950,7 +971,12 @@ public partial class SEUResources
 
         internal  bool TryDestoryObject(Object asset, bool isAsset)
         {
-            int code = asset.GetInstanceID();
+            return RemoveResource(asset, isAsset);
+        }
+
+        internal bool RemoveResource(Object asset, bool isAsset)
+        {
+            int assetCode = asset.GetInstanceID();
             Dictionary<int, SEUResources> record = null;
             if (isAsset)
             {
@@ -961,16 +987,16 @@ public partial class SEUResources
                 record = m_InstantiateRefSEUResources;
             }
             SEUResources refResource = null;
-            record.TryGetValue(code, out refResource);
+            record.TryGetValue(assetCode, out refResource);
             if (refResource != null)
-            {       
-                if (refResource.m_RefCount == 0)
-                {
-                    record.Remove(code);
-                }
+            {
                 if (isAsset == false)
                 {
-                    Object.Destroy(asset);
+                    Object.Destroy(asset);   
+                }
+                if (refResource.m_RefCount == 0)
+                {
+                    record.Remove(assetCode);
                 }
                 UnLoadResource(refResource);
                 return true;
@@ -978,25 +1004,15 @@ public partial class SEUResources
             return false;
         }
 
-        internal void PopResource(bool isAsset)
-        {
-
-        }
-
-        internal Object PushResource(SEUResources resource, bool isAsset)
+        internal Object PushResource(SEUResources resource)
         {
             Object asset = null;
             if (resource != null)
             {
                 Dictionary<int, SEUResources> record = null;
-                if (isAsset)
-                {
-                    record = m_AssetRefSEUResources;
-                }
-                else
-                {
-                    record = m_InstantiateRefSEUResources;
-                }
+                
+                record = m_AssetRefSEUResources;
+         
                 if (resource.asset != null)
                 {
                     int code = resource.asset.GetInstanceID();
@@ -1004,10 +1020,11 @@ public partial class SEUResources
                     {
                         record.Add(code, resource);
                     }
-                    asset = resource.asset;
+                    asset = resource.asset;                   
                 }
                 else
                 {
+                    //没有加载到资源，内部就把SEUResource 对象释放
                     UnLoadResource(resource);
                 }
             }
@@ -1017,7 +1034,7 @@ public partial class SEUResources
     }
 
     static SEUResourcesPool m_ResourcePool;
-    static SEUObjectPool   m_ObjectPool;
+    static SEUObjectPool    m_ObjectPool;
 
     static SEUResources()
     {

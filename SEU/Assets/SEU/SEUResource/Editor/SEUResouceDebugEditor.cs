@@ -7,8 +7,14 @@ public class SEUResouceDebugEditor : Editor{
 
     public override void OnInspectorGUI()
     {
+        SEUResourcesDebug debugObject = target as SEUResourcesDebug;
+        if(debugObject ==null||debugObject.resource == null)
+        {
+            return;
+        }
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            SEUResourcesDebug debugObject = target as SEUResourcesDebug;
+           
+
             var oc = GUI.color;
             GUI.color = Color.yellow;
             EditorGUILayout.LabelField("SEUResources ["+debugObject.resource.GetType()+"]", EditorStyles.boldLabel);

@@ -29,7 +29,7 @@ public partial class SEUResources{
         if(asset != null)
         {
             obj = Object.Instantiate<T>(asset as T);
-            m_ObjectPool.AttachAssetToInstance(asset.GetInstanceID(), obj.GetInstanceID());
+            m_ObjectPool.AttachAssetToInstance(asset, obj);
         }
         else
         {
@@ -43,7 +43,7 @@ public partial class SEUResources{
         if (asset != null)
         {
             obj = Object.Instantiate(asset);
-            m_ObjectPool.AttachAssetToInstance(asset.GetInstanceID(), obj.GetInstanceID());
+            m_ObjectPool.AttachAssetToInstance(asset, obj);
         }
         else
         {
@@ -57,7 +57,7 @@ public partial class SEUResources{
         if (asset != null)
         {
             obj = Object.Instantiate(asset,postion,quaternion);
-            m_ObjectPool.AttachAssetToInstance(asset.GetInstanceID(), obj.GetInstanceID());
+            m_ObjectPool.AttachAssetToInstance(asset, obj);
         }
         else
         {
@@ -87,7 +87,7 @@ public partial class SEUResources{
     static public Object Load(string path, System.Type type)
     {
         SEUResources resource = _Load(path, type);
-        return m_ObjectPool.PushResource(resource, true);
+        return m_ObjectPool.PushResource(resource);
     }
 
     static public Request LoadAsync<T>(string path) where T : Object
@@ -99,7 +99,7 @@ public partial class SEUResources{
     {
         Request request = _LoadAsync(path,type,
             (resource) => {
-                m_ObjectPool.PushResource(resource, true);
+                m_ObjectPool.PushResource(resource);
             }
         );
         return request;
