@@ -3,18 +3,18 @@ using System.Collections;
 /// <summary>
 /// 执行异步加载操作
 /// </summary>
-public class SEUResourcesAsyncOperator : MonoBehaviour {
+public class AsyncOperator : MonoBehaviour {
 
-    static SEUResourcesAsyncOperator _operator = null;
+    static AsyncOperator _operator = null;
     static bool _destory = false;
-    static SEUResourcesAsyncOperator asyncOperator
+    static AsyncOperator asyncOperator
     {
         get
         {
             if(_operator == null&&_destory ==false)
             {
-                GameObject asyncRequestRunner = new GameObject("_[SEUResourcessAsyncOperator]_");
-                _operator = asyncRequestRunner.AddComponent<SEUResourcesAsyncOperator>();
+                GameObject asyncRequestRunner = new GameObject("_[AsyncOperator]_");
+                _operator = asyncRequestRunner.AddComponent<AsyncOperator>();
                 asyncOperator.hideFlags = HideFlags.HideInHierarchy;
                 DontDestroyOnLoad(asyncRequestRunner);
             }

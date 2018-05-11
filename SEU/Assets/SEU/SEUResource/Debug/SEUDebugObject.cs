@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class SEUResourcesDebug : MonoBehaviour {
+public class SEUDebugObject : MonoBehaviour {
 	public SEUResources resource;
 }

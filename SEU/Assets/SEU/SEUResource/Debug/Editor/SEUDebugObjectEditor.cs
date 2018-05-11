@@ -2,12 +2,12 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections;
-[CustomEditor(typeof(SEUResourcesDebug))]
-public class SEUResouceDebugEditor : Editor{
+[CustomEditor(typeof(SEUDebugObject))]
+public class SEUDebugObjectEditor : Editor{
 
     public override void OnInspectorGUI()
     {
-        SEUResourcesDebug debugObject = target as SEUResourcesDebug;
+        SEUDebugObject debugObject = target as SEUDebugObject;
         if(debugObject ==null||debugObject.resource == null)
         {
             return;

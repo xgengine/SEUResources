@@ -1,26 +1,31 @@
-﻿#define SEU_DEBUG
+﻿//#define SEU_DEBUG
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 /// <summary>
-/// SEUResources 对Unity资源加载进行封装、保持和 Resources 资源加载接口形式，并对资源进行引用计数的管理
+/// SEUResources 对Unity资源加载进行封装、
+/// 1 保持和 Resources 资源加载等同的接口形式
+/// 2 支持同步、异步加载方式，
+/// 3 对资源进行引用计数的管理
+/// 4 支持Resource 和 AssetBundle 两种加载方式
 /// </summary>
 public partial class SEUResources{
 
     static public void ResisterGroupPath(
         string groupPath,
         SEULoaderType loaderType,
-        SEUResourcesUnLoadType unLoadType = SEUResourcesUnLoadType.REFCOUNT_ZERO,
-        IPathProvider manifestBunderPathProvider = null,
-        IPathConverter resToBundlerPathConverter = null
+        SEUUnLoadType unLoadType = SEUUnLoadType.REFCOUNT_ZERO,
+        string manifestBundlePath=null,
+        IPathConverter resToBundlerPathConverter = null,
+        SEUBundleLoader bundleLoader = null    
         )
     {
         if (groupPath.EndsWith("/"))
         {
             groupPath = groupPath.Substring(0, groupPath.Length - 1);
         }
-        m_ResourcePool.ResisterGroupPath(groupPath, loaderType, unLoadType, manifestBunderPathProvider,resToBundlerPathConverter);
+        m_ResourcePool.ResisterGroupPath(groupPath, loaderType, unLoadType, resToBundlerPathConverter,bundleLoader,manifestBundlePath);
     }
 
     static public T Instantiate<T>(Object asset) where T : Object
@@ -65,7 +70,6 @@ public partial class SEUResources{
         }
         return obj;
     }
-
     static public T LoadAndInstantiate<T>(string path) where T:Object
     {
         Object asset = Load<T>(path);
@@ -93,22 +97,6 @@ public partial class SEUResources{
     static public Request LoadAsync<T>(string path) where T : Object
     {
         return LoadAsync(path, typeof(T));
-    }
-
-    static private Request LoadAsync(string path, System.Type type)
-    {
-        Request request = _LoadAsync(path,type,
-            (resource) => {
-                m_ObjectPool.PushResource(resource);
-            }
-        );
-        return request;
-
-    }
-
-    static private Request LoadAsync(string path)
-    {
-        return LoadAsync(path, typeof(UnityEngine.Object));
     }
 
     static public void DestoryObject(Object asset)
@@ -146,7 +134,7 @@ public partial class SEUResources{
             m_Resource = resource;
             if (resource.asset == null)
             {
-                SEUResourcesAsyncOperator.SendReqest(MainLoop(callback));
+                AsyncOperator.SendReqest(MainLoop(callback));
             }
             else
             {
@@ -185,103 +173,9 @@ public enum SEULoaderType
     AB,
 }
 
-public enum SEUResourcesUnLoadType
+public enum SEUUnLoadType
 {
     REFCOUNT_ZERO,  //计数为零释放内存
     PERMANENT       //常驻内存
 }
 
-public interface IPathConverter
-{
-    string HandlePath(string path);
-
-}
-
-public interface IPathProvider
-{
-    string GetPath();
-}
-
-/// <summary>
-/// 根据加载路径，生成AB包路径
-/// </summary>
-/// <param name="path"></param>
-/// <returns></returns>
-public class SEUDefulatResourceToBundlePathConverter:IPathConverter
-{
-    public string HandlePath(string path)
-    {
-        return "assets/resources/" + path;
-    }
-}
-
-/// <summary>
-/// 获取资源组AB包的Manifest，进而获取AB包的依赖
-/// </summary>
-/// <returns></returns>
-public class SEUGroupManifestBundlePathProvider : IPathProvider
-{
-
-    public string GetPath()
-    {
-        return "assetbundles";
-    }
-}
-
-
-public abstract class SEUBundleLoader
-{
-    public abstract AssetBundle LoadAssetBundle(string bundleName);
-    public abstract AssetBundleCreateRequest LoadAssetBundlAsyn(string bundleName);
-}
-
-public class SEUBundleLoaderFromFile:SEUBundleLoader
-{
-    public override AssetBundle LoadAssetBundle(string bundleName)
-    {
-        string bundlePath = System.IO.Path.GetDirectoryName(Application.dataPath) + "/assetbundles/" + bundleName;
-        AssetBundle bundle = AssetBundle.LoadFromFile(bundlePath);
-        return bundle;
-    }
-    public override AssetBundleCreateRequest LoadAssetBundlAsyn(string bundleName)
-    {
-        string bundlePath = System.IO.Path.GetDirectoryName(Application.dataPath) + "/assetbundles/" + bundleName;
-        return AssetBundle.LoadFromFileAsync(bundlePath);
-    }
-}
-
-public class SEUBundleLoaderFromMemory:SEUBundleLoader
-{ 
-    public override AssetBundle LoadAssetBundle(string bundleName)
-    {
-        string bundlePath = System.IO.Path.GetDirectoryName(Application.dataPath) + "/assetbundles/" + bundleName;
-        byte[] buffer = SEUFileLoader.ReadAllBytes(bundlePath);
-        AssetBundle bundle = AssetBundle.LoadFromMemory(buffer);
-        return bundle;
-    }
-    public override AssetBundleCreateRequest LoadAssetBundlAsyn(string bundleName)
-    {
-        string bundlePath = System.IO.Path.GetDirectoryName(Application.dataPath) + "/assetbundles/" + bundleName;
-        byte[] buffer = SEUFileLoader.ReadAllBytes(bundlePath);
-        return AssetBundle.LoadFromMemoryAsync(buffer);
-    }
-}
-
-/// <summary>
-/// 文件加载器
-/// </summary>
-public class SEUFileLoader
-{
-    static public byte[] ReadAllBytes(string path)
-    {
-        if (File.Exists(path))
-        {
-            return File.ReadAllBytes(path);
-        }
-        else
-        {
-            return null;
-        }
-        
-    }
-}
