@@ -25,7 +25,7 @@ public partial class SEUResources
         }
     }
 
-    protected Request m_LoadAysncRequest;
+    protected AsyncRequest m_LoadAysncRequest;
 
     private int m_RefCount = 0;
 
@@ -102,11 +102,11 @@ public partial class SEUResources
         yield break;
     }
 
-    protected Request SendLoadAsyncRequest(System.Action<SEUResources> callback =null)
+    protected AsyncRequest SendLoadAsyncRequest(System.Action<SEUResources> callback =null)
     {
         if(m_LoadAysncRequest == null)
         {
-            m_LoadAysncRequest = new Request(this,callback);
+            m_LoadAysncRequest = new AsyncRequest(this,callback);
         }
         return m_LoadAysncRequest;
     }
@@ -117,9 +117,6 @@ public partial class SEUResources
         {
             m_DependenceResources.Add(resource);
             resource.Use();
-#if SEU_DEBUG
-            resource.Debug_MarkStackInfo();
-#endif
         }
     }
 
@@ -159,10 +156,7 @@ public partial class SEUResources
         debugObject.resource = this;
     }
     public List<string> Debug_StackInfo=new List<string>();
-    public void Debug_MarkStackInfo()
-    {
-        Debug_StackInfo.Add("[Load]" + StackTraceUtility.ExtractStackTrace());
-    }
+
 #endif
 
     static private void UnLoadResource(SEUResources resource)
@@ -180,17 +174,17 @@ public partial class SEUResources
         return result;
     }
 
-    static private Request _LoadAsync(string path, System.Type type, System.Action<SEUResources> callback = null)
+    static private AsyncRequest _LoadAsync(string path, System.Type type, System.Action<SEUResources> callback = null)
     {
         path = path.ToLower();
         return m_ResourcePool.LoadAsyn(path, type, callback);
     }
 
-    static private Request LoadAsync(string path, System.Type type)
+    static private AsyncRequest LoadAsync(string path, System.Type type, System.Action<Object> callback = null)
     {
-        Request request = _LoadAsync(path, type,
+        AsyncRequest request = _LoadAsync(path, type,
             (resource) => {
-                m_ObjectPool.PushResource(resource);
+                m_ObjectPool.GetObject(resource);
             }
         );
         return request;
@@ -202,7 +196,7 @@ public partial class SEUResources
         return path + type.ToString();
     }
 
-    static private Request LoadAsync(string path)
+    static private AsyncRequest LoadAsync(string path)
     {
         return LoadAsync(path, typeof(UnityEngine.Object));
     }

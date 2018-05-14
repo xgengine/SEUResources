@@ -11,8 +11,7 @@ using System.IO;
 /// 4 支持Resource 和 AssetBundle 两种加载方式
 /// </summary>
 public partial class SEUResources{
-
-    static public void ResisterGroupPath(
+    static public void ResisterGroupPath( 
         string groupPath,
         SEULoaderType loaderType,
         SEUUnLoadType unLoadType = SEUUnLoadType.REFCOUNT_ZERO,
@@ -30,17 +29,17 @@ public partial class SEUResources{
 
     static public T Instantiate<T>(Object asset) where T : Object
     {
-        T obj = null;
+        T instance = null;
         if(asset != null)
         {
-            obj = Object.Instantiate<T>(asset as T);
-            m_ObjectPool.AttachAssetToInstance(asset, obj);
+            instance = Object.Instantiate<T>(asset as T);
+            m_ObjectPool.AttachAssetToInstance(asset, instance);
         }
         else
         {
             Debug.LogError("[SEUResources] Instantiate Object But The Object is NULL");
         }
-        return obj;
+        return instance;
     }
     static public Object Instantiate(Object asset)
     {
@@ -74,108 +73,46 @@ public partial class SEUResources{
     {
         Object asset = Load<T>(path);
         T insObj = Instantiate<T>(asset);
-        DestoryObject(asset);
+        Destory(asset);
         return insObj;
     }
-
     static public T Load<T>(string path) where T : Object
     {
         return Load(path, typeof(T)) as T;
     }
-
     static public Object Load(string path)
     {
         return Load(path, typeof(UnityEngine.Object));
     }
-
     static public Object Load(string path, System.Type type)
     {
         SEUResources resource = _Load(path, type);
-        return m_ObjectPool.PushResource(resource);
+        return m_ObjectPool.GetObject(resource);
     }
-
-    static public Request LoadAsync<T>(string path) where T : Object
+    static public AsyncRequest LoadAsync<T>(string path) where T : Object
     {
         return LoadAsync(path, typeof(T));
     }
 
-    static public void DestoryObject(Object asset)
+    static public bool PreLoadBundle(string path)
+    {
+        m_ResourcePool.LoadBundle(path);
+        return true;
+    }
+
+    static public void Destory(Object asset)
     {
         if (asset != null)
         {
-            m_ObjectPool.DestoryObject(asset);       
+            m_ObjectPool.DesotoryObject(asset);       
+        }
+        else
+        {
+            Debug.LogError("Destory Object is null, please check why it is null,you must destory obj use this api");
         }
         
-    }
-
-    public class Request : CustomYieldInstruction
-    {
-        public Object asset
-        {
-            get
-            {
-                if (m_Resource != null)
-                {
-                    return m_Resource.asset;
-                }
-                return null;
-            }
-        }
-        private SEUResources m_Resource;
-        internal SEUResources resource
-        {
-            get
-            {
-                return m_Resource;
-            }
-        }
-        internal Request(SEUResources resource,System.Action<SEUResources> callback =null)
-        {
-            m_Resource = resource;
-            if (resource.asset == null)
-            {
-                AsyncOperator.SendReqest(MainLoop(callback));
-            }
-            else
-            {
-                if (callback != null)
-                {
-                    callback(resource);
-                }
-                m_KepWaiting = false;
-            }
-           
-        }
-        private IEnumerator MainLoop(System.Action<SEUResources> callback =null)
-        {
-            yield return resource.LoadAssetAsync();
-            if (callback != null)
-            {
-                callback(resource);
-            }
-            m_KepWaiting = false;
-
-        }
-        private bool m_KepWaiting = true;
-        public override bool keepWaiting
-        {
-            get
-            {
-                return m_KepWaiting;
-            }
-        }
-    }
+    }   
 }
 
-public enum SEULoaderType
-{
-    RESOURCE,
-    AB,
-}
 
-public enum SEUUnLoadType
-{
-    REFCOUNT_ZERO,  //计数为零释放内存
-    PERMANENT       //常驻内存
-}
 

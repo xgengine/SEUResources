@@ -5,7 +5,7 @@ public partial class SEUResources {
 
     private class SEUResourcesPool
     {
-        class SEULoaderResourceGroupPooolRegister
+        class SEUGroupPooolRegister
         {
             class PathNode
             {
@@ -90,7 +90,7 @@ public partial class SEUResources {
                 }
             }
             PathNode Root;
-            internal SEULoaderResourceGroupPooolRegister()
+            internal SEUGroupPooolRegister()
             {
                 Root = new PathNode();
             }
@@ -112,7 +112,7 @@ public partial class SEUResources {
         private Dictionary<int, SEUResourcesPool> m_ResourceGroupPool = new Dictionary<int, SEUResourcesPool>();
         private Dictionary<string, SEUResources> m_Resources = new Dictionary<string, SEUResources>();
         private static Dictionary<string, SEUResources> m_AssetBundles = new Dictionary<string, SEUResources>();
-        private SEULoaderResourceGroupPooolRegister m_GroupPoolRegister;
+        private SEUGroupPooolRegister m_GroupPoolRegister;
         private SEULoaderType m_LoaderType;
         private SEUUnLoadType m_UnloadType;
         private IPathConverter m_ResourceToBundlePathConverter;
@@ -138,29 +138,29 @@ public partial class SEUResources {
 
             static SEUResourcesPool()
             {
-                Debug_SEUPoolObject = new GameObject("_[SEUAssetPool]_");
+                Debug_SEUPoolObject = new GameObject("[SEUAssetPool]");
                 GameObject.DontDestroyOnLoad(Debug_SEUPoolObject);
 
-                Debug_ResourcesLoadObject = new GameObject("_[ResourcesLoad]_");
+                Debug_ResourcesLoadObject = new GameObject("[ResourcesLoad]");
                 Debug_ResourcesLoadObject.transform.SetParent(Debug_SEUPoolObject.transform);
 
-                Debug_AssetsObject = new GameObject("_[Assets]");
+                Debug_AssetsObject = new GameObject("[Assets]");
                 Debug_AssetsObject.transform.SetParent(Debug_ResourcesLoadObject.transform);
 
-                Debug_AssetBundleLoadObject = new GameObject("_[AssetBundleLoad]_");
+                Debug_AssetBundleLoadObject = new GameObject("[AssetBundleLoad]");
                 Debug_AssetBundleLoadObject.transform.SetParent(Debug_SEUPoolObject.transform);
 
-                Debug_AssetBundlesObject = new GameObject("_[AssetBundles]_");
+                Debug_AssetBundlesObject = new GameObject("[AssetBundles]");
                 Debug_AssetBundlesObject.transform.SetParent(Debug_AssetBundleLoadObject.transform);
 
-                Debug_AssetsObjectLoadByBundles = new GameObject("_[Assets]_");
+                Debug_AssetsObjectLoadByBundles = new GameObject("[Assets]");
                 Debug_AssetsObjectLoadByBundles.transform.SetParent(Debug_AssetBundleLoadObject.transform);
 
             }
     #endif
         public SEUResourcesPool()
         {
-            m_GroupPoolRegister = new SEULoaderResourceGroupPooolRegister();
+            m_GroupPoolRegister = new SEUGroupPooolRegister();
         }
 
         internal string groupPath
@@ -194,7 +194,7 @@ public partial class SEUResources {
             }
             if (m_BundleLoader == null)
             {
-                m_BundleLoader = new SEUBundleLoaderFromFile();
+                m_BundleLoader = new SEUBundleLoaderFromMemory();
             }
             Debug_InitPool();
         }
@@ -232,7 +232,7 @@ public partial class SEUResources {
     #if SEU_DEBUG
 
                     resource.DebugCreateObject();
-                    if (resource is SEUABResource || resource is SEUMenifestBundleResource)
+                    if (resource is SEUResourcesBundle || resource is SEUResourceMenifest)
                     {
                         resource.DebugObject.transform.SetParent(Debug_AssetBundlesObject.transform);
                     }
@@ -308,7 +308,7 @@ public partial class SEUResources {
             return null;
         }
 
-        internal Request LoadAsyn(string path, System.Type type, System.Action<SEUResources> callback = null)
+        internal AsyncRequest LoadAsyn(string path, System.Type type, System.Action<SEUResources> callback = null)
         {
             SEUResourcesPool pool = GetGroupPool(path);
             if (pool != null)
@@ -350,7 +350,7 @@ public partial class SEUResources {
             return resource;
         }
 
-        private Request LoadAsynInternal(string path, System.Type type, System.Action<SEUResources> callback)
+        private AsyncRequest LoadAsynInternal(string path, System.Type type, System.Action<SEUResources> callback)
         {
             SEUResources resource = null;
             string resGUID = ToResGUID(path, type);
@@ -376,7 +376,7 @@ public partial class SEUResources {
             return resource.SendLoadAsyncRequest(callback);
         }
 
-        internal SEUResources LoadAssetBundle(string path, bool isNeedConvertBundlePath = false)
+        internal SEUResources LoadBundle(string path, bool isNeedConvertBundlePath = false)
         {
             string bundlePath = path;
             if (isNeedConvertBundlePath)
@@ -404,7 +404,7 @@ public partial class SEUResources {
             return resource;
         }
 
-        internal Request LoadAssetBundleAsyn(string path, bool isNeedConvertBundlePath = false)
+        internal AsyncRequest LoadBundleAsyn(string path, bool isNeedConvertBundlePath = false)
         {
             string bundlePath = path;
             if (isNeedConvertBundlePath)
@@ -426,7 +426,7 @@ public partial class SEUResources {
             return resource.SendLoadAsyncRequest();
         }
 
-        internal SEUResources LoadBundleManifest(string path)
+        internal SEUResources LoadManifest(string path)
         {
             if (m_ManifestPath != null)
             {
@@ -454,7 +454,7 @@ public partial class SEUResources {
             return null;
         }
 
-        internal Request LoadBundleManifestAsync(string path)
+        internal AsyncRequest LoadManifestAsync(string path)
         {
             if (m_ManifestPath != null)
             {
@@ -497,8 +497,9 @@ public partial class SEUResources {
             if (pool != null)
             {
                 pool.InitPool(groupPath, loaderType, unLoadType, resToBundlerPathConverter, bundleLoader, manifestBundlePath);
+                AddGroupPool(pool);
             }
-            AddGroupPool(pool);
+           
         }
 
         private void AddGroupPool(SEUResourcesPool pool)

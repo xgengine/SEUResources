@@ -44,8 +44,11 @@ public class SEUBundleLoaderFromMemory : SEUBundleLoader
 {
     public override AssetBundle LoadAssetBundle(string bundleName)
     {
+        Profiler.BeginSample("Loader");
         string bundlePath = System.IO.Path.GetDirectoryName(Application.dataPath) + "/assetbundles/" + bundleName;
         byte[] buffer = SEUFileLoader.ReadAllBytes(bundlePath);
+
+        Profiler.EndSample();
         AssetBundle bundle = AssetBundle.LoadFromMemory(buffer);
         return bundle;
     }

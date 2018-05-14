@@ -13,9 +13,9 @@ public class AsyncOperator : MonoBehaviour {
         {
             if(_operator == null&&_destory ==false)
             {
-                GameObject asyncRequestRunner = new GameObject("_[AsyncOperator]_");
+                GameObject asyncRequestRunner = new GameObject("[AsyncOperator]");
                 _operator = asyncRequestRunner.AddComponent<AsyncOperator>();
-                asyncOperator.hideFlags = HideFlags.HideInHierarchy;
+                asyncRequestRunner.hideFlags = HideFlags.HideInHierarchy;
                 DontDestroyOnLoad(asyncRequestRunner);
             }
             return _operator;

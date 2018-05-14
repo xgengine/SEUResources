@@ -14,7 +14,7 @@ public class UIABBuilder {
         {
             Directory.CreateDirectory(assetbundlesPath);
         }      
-        BuildPipeline.BuildAssetBundles(assetbundlesPath, BuildAssetBundleOptions.UncompressedAssetBundle, EditorUserBuildSettings.activeBuildTarget);
+        BuildPipeline.BuildAssetBundles(assetbundlesPath, BuildAssetBundleOptions.ChunkBasedCompression, EditorUserBuildSettings.activeBuildTarget);
     }
 
     static void BuildUI()

@@ -23,7 +23,7 @@ public partial class SEUResources{
                 Debug.LogWarning("[异步冲突]");
             }
 
-            SEUResources manifestRes = m_Pool.LoadBundleManifest(m_LoadPath);
+            SEUResources manifestRes = m_Pool.LoadManifest(m_LoadPath);
             if (manifestRes != null && manifestRes.asset != null)
             {
                 AddDependenceResources(manifestRes);
@@ -35,14 +35,13 @@ public partial class SEUResources{
                     {
                         for (int i = 0; i < dependenciesPaths.Length; i++)
                         {
-                            SEUResources depRes = m_Pool.LoadAssetBundle(dependenciesPaths[i]);
+                            SEUResources depRes = m_Pool.LoadBundle(dependenciesPaths[i]);
                             AddDependenceResources(depRes);
                         }
                     }
                 }
             }
             //LogResult();
-
         }
 
         protected override IEnumerator LoadAssetAsync()
@@ -57,7 +56,7 @@ public partial class SEUResources{
             {
                 Debug.LogWarning("[同步冲突] 已经处理");
             }
-            SEUResources manifestRes = m_Pool.LoadBundleManifest(m_LoadPath);
+            SEUResources manifestRes = m_Pool.LoadManifest(m_LoadPath);
             if (manifestRes != null && manifestRes.asset != null)
             {
                 AddDependenceResources(manifestRes);
@@ -69,7 +68,7 @@ public partial class SEUResources{
                     {
                         for (int i = 0; i < dependenciesPaths.Length; i++)
                         {
-                            Request request = m_Pool.LoadAssetBundleAsyn(dependenciesPaths[i]);
+                            AsyncRequest request = m_Pool.LoadBundleAsyn(dependenciesPaths[i]);
                             yield return request;
                             SEUResources depRes = request.resource;
                             AddDependenceResources(depRes);

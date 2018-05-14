@@ -13,7 +13,7 @@ public partial class SEUResources{
         }
         protected override void LoadAsset()
         {
-            SEUResources bundleRes = m_Pool.LoadAssetBundle(m_LoadPath, true);
+            SEUResources bundleRes = m_Pool.LoadBundle(m_LoadPath, true);
             AssetBundle bundle = bundleRes.asset as AssetBundle;
             if (bundle != null)
             {
@@ -28,7 +28,7 @@ public partial class SEUResources{
         }
         protected override IEnumerator LoadAssetAsync()
         {
-            Request request = m_Pool.LoadAssetBundleAsyn(m_LoadPath, true);
+            AsyncRequest request = m_Pool.LoadBundleAsyn(m_LoadPath, true);
             yield return request;
             SEUResources bundleRes = request.resource;
             AssetBundle bundle = bundleRes.asset as AssetBundle;

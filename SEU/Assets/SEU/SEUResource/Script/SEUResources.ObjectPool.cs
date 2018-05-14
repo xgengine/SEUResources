@@ -5,8 +5,8 @@ public partial class SEUResources
 {
     private class SEUObjectPool
     {
-        private Dictionary<int, SEUResources> m_AssetRefSEUResources = new Dictionary<int, SEUResources>();
-        private Dictionary<int, SEUResources> m_InstantiateRefSEUResources = new Dictionary<int, SEUResources>();
+        public Dictionary<int, SEUResources> m_AssetRefSEUResources = new Dictionary<int, SEUResources>();
+        public Dictionary<int, SEUResources> m_InstanceRefSEUResources = new Dictionary<int, SEUResources>();
 
 #if SEU_DEBUG
         private Dictionary<int, GameObject> Debeg_InstantiateObjects = new Dictionary<int, GameObject>();
@@ -38,16 +38,19 @@ public partial class SEUResources
 
             SEUResources refResource = null;
 
-            m_AssetRefSEUResources.TryGetValue(assetCode, out refResource);
+            if (m_AssetRefSEUResources.ContainsKey(assetCode))
+            {
+                refResource = m_AssetRefSEUResources[assetCode];
+            }
             if (refResource == null)
             {
-                m_InstantiateRefSEUResources.TryGetValue(assetCode, out refResource);
+                m_InstanceRefSEUResources.TryGetValue(assetCode, out refResource);
             }
             if (refResource != null)
             {
-                if (!m_InstantiateRefSEUResources.ContainsKey(instanceCode))
+                if (!m_InstanceRefSEUResources.ContainsKey(instanceCode))
                 {
-                    m_InstantiateRefSEUResources.Add(instanceCode, refResource);
+                    m_InstanceRefSEUResources.Add(instanceCode, refResource);
                     refResource.Use();
                 }
                 else
@@ -61,50 +64,35 @@ public partial class SEUResources
             }
         }
 
-        internal void DestoryObject(Object asset)
-        {
-            if ((TryDestoryObject(asset, true) || TryDestoryObject(asset, false)) == false)
-            {
-                Debug.LogError("[SEUResources] Try Destory Object ,But it not in Ref System " + StackTraceUtility.ExtractStackTrace());
-            }
-        }
-
-        internal bool TryDestoryObject(Object asset, bool isAsset)
-        {
-            return RemoveResource(asset, isAsset);
-        }
-
-        internal bool RemoveResource(Object asset, bool isAsset)
+        internal void  DesotoryObject(Object asset)
         {
             int assetCode = asset.GetInstanceID();
-            Dictionary<int, SEUResources> record = null;
-            if (isAsset)
+            SEUResources refRes = null;
+            if (m_AssetRefSEUResources.ContainsKey(assetCode))
             {
-                record = m_AssetRefSEUResources;
+                refRes = m_AssetRefSEUResources[assetCode];          
+            }
+            else if (m_InstanceRefSEUResources.ContainsKey(assetCode))
+            {
+                Object.Destroy(asset);
+                refRes = m_InstanceRefSEUResources[assetCode];
+                m_InstanceRefSEUResources.Remove(assetCode);               
+            }
+            if(refRes != null)
+            {
+                UnLoadResource(refRes);
+                if (refRes.refCount == 0)
+                {
+                    m_AssetRefSEUResources.Remove(refRes.asset.GetInstanceID());
+                }           
             }
             else
             {
-                record = m_InstantiateRefSEUResources;
-            }
-            SEUResources refResource = null;
-            record.TryGetValue(assetCode, out refResource);
-            if (refResource != null)
-            {
-                if (isAsset == false)
-                {
-                    Object.Destroy(asset);
-                }
-                if (refResource.m_RefCount == 0)
-                {
-                    record.Remove(assetCode);
-                }
-                UnLoadResource(refResource);
-                return true;
-            }
-            return false;
+                Debug.LogError("[SEUResources] Try Destory Object ,But it not in Ref System " + StackTraceUtility.ExtractStackTrace());
+            }         
         }
 
-        internal Object PushResource(SEUResources resource)
+        internal Object GetObject(SEUResources resource)
         {
             Object asset = null;
             if (resource != null)
@@ -125,7 +113,7 @@ public partial class SEUResources
                 else
                 {
                     //没有加载到资源，内部就把SEUResource 对象释放
-                    UnLoadResource(resource);
+                    UnLoadResource(resource);                   
                 }
             }
             return asset;
