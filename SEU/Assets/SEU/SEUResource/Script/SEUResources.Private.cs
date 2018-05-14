@@ -113,7 +113,7 @@ public partial class SEUResources
 
     protected void AddDependenceResources(SEUResources resource)
     {
-        if(m_DependenceResources.Contains(resource) == false)
+        if(m_DependenceResources.Contains(resource) == false&&resource !=null)
         {
             m_DependenceResources.Add(resource);
             resource.Use();

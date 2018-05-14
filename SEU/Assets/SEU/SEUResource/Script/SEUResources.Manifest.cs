@@ -14,7 +14,13 @@ public partial class SEUResources{
         }
         protected override void LoadAsset()
         {
-            bundle = m_Pool.LoadAssetBundleInternal(m_LoadPath);
+            SEUBundleLoader bundleLoader = m_Pool.GetBundleLoader(m_LoadPath);
+            if(bundleLoader != null)
+            {
+                bundleLoader.Load();
+                bundle = bundleLoader.assetBundle;
+            }
+            
             if (bundle != null)
             {
                 m_Asset = bundle.LoadAsset("assetbundlemanifest");
@@ -23,16 +29,21 @@ public partial class SEUResources{
         }
         protected override IEnumerator LoadAssetAsync()
         {
-            AssetBundleCreateRequest createReuest = m_Pool.LoadAssetBundlAsynInternal(m_LoadPath);
-            yield return createReuest;
-            if (bundle == null)
+            SEUBundleLoader bundleLoader = m_Pool.GetBundleLoader(m_LoadPath);
+            if (bundleLoader != null)
             {
-                bundle = createReuest.assetBundle;
+                yield return bundleLoader.LoadAsync();
+                if (bundle == null)
+                {
+                    bundle = bundleLoader.assetBundle;
+                }
+                else
+                {
+                    Debug.LogWarning("[同步冲突] 已经处理");
+                }
             }
-            else
-            {
-                Debug.LogWarning("[同步冲突] 已经处理");
-            }
+           
+            
             if (bundle != null)
             {
                 AssetBundleRequest request = bundle.LoadAssetAsync("assetbundlemanifest");

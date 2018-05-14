@@ -14,19 +14,23 @@ public partial class SEUResources{
 
         protected override void LoadAsset()
         {
-            if (m_Asset == null)
+            SEUBundleLoader bundleLoader = m_Pool.GetBundleLoader(m_LoadPath);
+            if (bundleLoader != null)
             {
-                m_Asset = m_Pool.LoadAssetBundleInternal(m_LoadPath);
+                bundleLoader.Load();
+                if (m_Asset == null)
+                {
+                    m_Asset = bundleLoader.assetBundle;
+                }
+                else
+                {
+                    Debug.LogWarning("[异步冲突]");
+                }
             }
-            else
-            {
-                Debug.LogWarning("[异步冲突]");
-            }
-
             SEUResources manifestRes = m_Pool.LoadManifest(m_LoadPath);
+            AddDependenceResources(manifestRes);
             if (manifestRes != null && manifestRes.asset != null)
-            {
-                AddDependenceResources(manifestRes);
+            {               
                 AssetBundleManifest manifest = manifestRes.asset as AssetBundleManifest;
                 if (manifest != null)
                 {
@@ -46,20 +50,23 @@ public partial class SEUResources{
 
         protected override IEnumerator LoadAssetAsync()
         {
-            AssetBundleCreateRequest createRequest = m_Pool.LoadAssetBundlAsynInternal(m_LoadPath);
-            yield return createRequest;
-            if (m_Asset == null)//做一下判断 防止和同步冲突
+            SEUBundleLoader bundleLoader = m_Pool.GetBundleLoader(m_LoadPath);
+            if (bundleLoader != null)
             {
-                m_Asset = createRequest.assetBundle;
-            }
-            else
-            {
-                Debug.LogWarning("[同步冲突] 已经处理");
+                yield return bundleLoader.LoadAsync();
+                if (m_Asset == null)
+                {
+                    m_Asset = bundleLoader.assetBundle;
+                }
+                else
+                {
+                    Debug.LogWarning("[同步冲突] 已经处理");
+                }
             }
             SEUResources manifestRes = m_Pool.LoadManifest(m_LoadPath);
+            AddDependenceResources(manifestRes);
             if (manifestRes != null && manifestRes.asset != null)
             {
-                AddDependenceResources(manifestRes);
                 AssetBundleManifest manifest = manifestRes.asset as AssetBundleManifest;
                 if (manifest != null)
                 {

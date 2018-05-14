@@ -118,7 +118,7 @@ public partial class SEUResources {
         private IPathConverter m_ResourceToBundlePathConverter;
         private string m_ManifestPath;
         private IPathConverter m_BundleFilePathConverter;
-        private SEUBundleLoader m_BundleLoader;
+        private SEUBundleLoaderType m_BundleLoaderType = SEUBundleLoaderType.Defualt_Memory_BundleLoader;
 
         private string m_GroupPath = "defual";
 
@@ -176,26 +176,22 @@ public partial class SEUResources {
             SEULoaderType loaderType,
             SEUUnLoadType unLoadType = SEUUnLoadType.REFCOUNT_ZERO,
             IPathConverter resToBundlerPathConverter = null,
-            SEUBundleLoader bundleLoader = null,
+            SEUBundleLoaderType bundleLoaderType = SEUBundleLoaderType.Defualt_Memory_BundleLoader,
             string manifestBundlePath = null
             )
         {
             m_GroupPath = groupPath;
             m_LoaderType = loaderType;
             m_UnloadType = unLoadType;
-
             m_ResourceToBundlePathConverter = resToBundlerPathConverter;
             m_ManifestPath = manifestBundlePath;
-            m_BundleLoader = bundleLoader;
+            m_BundleLoaderType = bundleLoaderType;
 
             if (m_ResourceToBundlePathConverter == null)
             {
-                m_ResourceToBundlePathConverter = new SEUDefulatResourceToBundlePathConverter();
+                m_ResourceToBundlePathConverter = new SEUBundlePathConverter();
             }
-            if (m_BundleLoader == null)
-            {
-                m_BundleLoader = new SEUBundleLoaderFromMemory();
-            }
+            
             Debug_InitPool();
         }
         private void Debug_InitPool()
@@ -476,27 +472,29 @@ public partial class SEUResources {
             return null;
         }
 
-        internal AssetBundle LoadAssetBundleInternal(string bundleName)
+        internal SEUBundleLoader GetBundleLoader(string bundleName)
         {
-            return m_BundleLoader.LoadAssetBundle(bundleName);
+            SEUBundleLoader bundleLoader = SEUResources.GetBundleLoader(m_BundleLoaderType);
+            if(bundleLoader != null)
+            {
+                bundleLoader.SetBundleName(bundleName);
+            }
+            return bundleLoader;
         }
-        internal AssetBundleCreateRequest LoadAssetBundlAsynInternal(string bundleName)
-        {
-            return m_BundleLoader.LoadAssetBundlAsyn(bundleName);
-        }
+
         internal void ResisterGroupPath(
             string groupPath,
             SEULoaderType loaderType,
             SEUUnLoadType unLoadType = SEUUnLoadType.REFCOUNT_ZERO,
             IPathConverter resToBundlerPathConverter = null,
-            SEUBundleLoader bundleLoader = null,
+            SEUBundleLoaderType bundleLoaderType = SEUBundleLoaderType.Defualt_Memory_BundleLoader,
             string manifestBundlePath = null
             )
         {
             SEUResourcesPool pool = m_GroupPoolRegister.ResisterGroupPath(groupPath);
             if (pool != null)
             {
-                pool.InitPool(groupPath, loaderType, unLoadType, resToBundlerPathConverter, bundleLoader, manifestBundlePath);
+                pool.InitPool(groupPath, loaderType, unLoadType, resToBundlerPathConverter, bundleLoaderType, manifestBundlePath);
                 AddGroupPool(pool);
             }
            

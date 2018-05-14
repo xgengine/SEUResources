@@ -17,14 +17,14 @@ public partial class SEUResources{
         SEUUnLoadType unLoadType = SEUUnLoadType.REFCOUNT_ZERO,
         string manifestBundlePath=null,
         IPathConverter resToBundlerPathConverter = null,
-        SEUBundleLoader bundleLoader = null    
+        SEUBundleLoaderType bundleLoaderType = SEUBundleLoaderType.Defualt_Memory_BundleLoader    
         )
     {
         if (groupPath.EndsWith("/"))
         {
             groupPath = groupPath.Substring(0, groupPath.Length - 1);
         }
-        m_ResourcePool.ResisterGroupPath(groupPath, loaderType, unLoadType, resToBundlerPathConverter,bundleLoader,manifestBundlePath);
+        m_ResourcePool.ResisterGroupPath(groupPath, loaderType, unLoadType, resToBundlerPathConverter,bundleLoaderType,manifestBundlePath);
     }
 
     static public T Instantiate<T>(Object asset) where T : Object
@@ -105,12 +105,7 @@ public partial class SEUResources{
         if (asset != null)
         {
             m_ObjectPool.DesotoryObject(asset);       
-        }
-        else
-        {
-            Debug.LogError("Destory Object is null, please check why it is null,you must destory obj use this api");
-        }
-        
+        }      
     }   
 }
 
