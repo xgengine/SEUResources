@@ -22,7 +22,8 @@ public partial class SEUResources{
                 {
 
                     string assetName = System.IO.Path.GetFileName(m_LoadPath);
-                    Object asset = bundle.LoadAsset(assetName, m_Type);
+                   
+                    Object asset = bundle.LoadAsset(assetName+".prefab", m_Type);
                     if (m_Asset == null)
                     {
                         m_Asset = asset;
