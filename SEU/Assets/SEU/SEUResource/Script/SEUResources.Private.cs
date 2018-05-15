@@ -39,7 +39,7 @@ public partial class SEUResources
         m_Type = type;
     }
 
-    private string GUID()
+    private int GUID()
     {
         return  ToResGUID(m_LoadPath, m_Type);
     }
@@ -124,11 +124,11 @@ public partial class SEUResources
     {
         if (m_Asset == null)
         {
-            Debug.LogError(GetType()+" Load failed :" + m_LoadPath);
+            Debug.LogError("[SEUResources] Load failed :" + m_LoadPath);
         }
         else
         {
-            Debug.Log(GetType()+ " Load Succeed :"+m_LoadPath );
+            Debug.Log("[SEUResources] Load Succeed :" + m_LoadPath );
         }
         
     }
@@ -191,9 +191,9 @@ public partial class SEUResources
 
     }
 
-    private static string ToResGUID(string path, System.Type type)
+    private static int ToResGUID(string path, System.Type type)
     {
-        return path + type.ToString();
+        return (path + type.Name).GetHashCode();
     }
 
     static private AsyncRequest LoadAsync(string path)

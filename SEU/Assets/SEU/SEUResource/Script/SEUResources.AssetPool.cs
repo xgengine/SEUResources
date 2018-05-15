@@ -110,8 +110,8 @@ public partial class SEUResources {
         }
 
         private Dictionary<int, SEUResourcesPool> m_ResourceGroupPool = new Dictionary<int, SEUResourcesPool>();
-        private Dictionary<string, SEUResources> m_Resources = new Dictionary<string, SEUResources>();
-        private static Dictionary<string, SEUResources> m_AssetBundles = new Dictionary<string, SEUResources>();
+        private Dictionary<int, SEUResources> m_Resources = new Dictionary<int, SEUResources>();
+        private static Dictionary<int, SEUResources> m_AssetBundles = new Dictionary<int, SEUResources>();
         private SEUGroupPooolRegister m_GroupPoolRegister;
         private SEULoaderType m_LoaderType;
         private SEUUnLoadType m_UnloadType;
@@ -211,8 +211,8 @@ public partial class SEUResources {
 
         private void PushResource(SEUResources resource)
         {
-            string resGUID = resource.GUID();
-            Dictionary<string, SEUResources> container = null;
+            int resGUID = resource.GUID();
+            Dictionary<int, SEUResources> container = null;
             if (resource is SEUResourcesBundle || resource is SEUResourceMenifest)
             {
                 container = m_AssetBundles;
@@ -247,8 +247,8 @@ public partial class SEUResources {
 
         internal void PopResource(SEUResources resource)
         {
-            string resGUI = resource.GUID();
-            Dictionary<string, SEUResources> container = null;
+            int resGUI = resource.GUID();
+            Dictionary<int, SEUResources> container = null;
             if (resource is SEUResourcesBundle || resource is SEUResourceMenifest)
             {
                 container = m_AssetBundles;
@@ -317,7 +317,7 @@ public partial class SEUResources {
         private SEUResources LoadInternal(string path, System.Type type)
         {
             SEUResources resource = null;
-            string resGUID = ToResGUID(path, type);
+            int resGUID = ToResGUID(path, type);
             if (m_Resources.ContainsKey(resGUID))
             {
                 resource = m_Resources[resGUID];
@@ -349,7 +349,7 @@ public partial class SEUResources {
         private AsyncRequest LoadAsynInternal(string path, System.Type type, System.Action<SEUResources> callback)
         {
             SEUResources resource = null;
-            string resGUID = ToResGUID(path, type);
+            int resGUID = ToResGUID(path, type);
             if (m_Resources.ContainsKey(resGUID))
             {
                 resource = m_Resources[resGUID];
@@ -380,7 +380,7 @@ public partial class SEUResources {
                 bundlePath = m_ResourceToBundlePathConverter.HandlePath(path);
             }
             System.Type type = typeof(AssetBundle);
-            string resGUID = ToResGUID(bundlePath, type);
+            int resGUID = ToResGUID(bundlePath, type);
             SEUResources resource = null;
             if (m_AssetBundles.ContainsKey(resGUID))
             {
@@ -408,7 +408,7 @@ public partial class SEUResources {
                 bundlePath = m_ResourceToBundlePathConverter.HandlePath(path);
             }
             System.Type type = typeof(AssetBundle);
-            string resGUID = ToResGUID(bundlePath, type);
+            int resGUID = ToResGUID(bundlePath, type);
             SEUResources resource = null;
             if (m_AssetBundles.ContainsKey(resGUID))
             {
@@ -428,7 +428,7 @@ public partial class SEUResources {
             {
                 string manifestPath = m_ManifestPath;
                 System.Type type = typeof(AssetBundleManifest);
-                string resGUID = ToResGUID(manifestPath, type);
+                int resGUID = ToResGUID(manifestPath, type);
                 SEUResources resource = null;
                 if (m_AssetBundles.ContainsKey(resGUID))
                 {
@@ -456,7 +456,7 @@ public partial class SEUResources {
             {
                 string manifestPath = m_ManifestPath;
                 System.Type type = typeof(UnityEngine.Object);
-                string resGUID = ToResGUID(manifestPath, type);
+                int resGUID = ToResGUID(manifestPath, type);
                 SEUResources resource = null;
                 if (m_AssetBundles.ContainsKey(resGUID))
                 {
@@ -511,7 +511,5 @@ public partial class SEUResources {
                 }
             }
         }
-
-
     }
 }

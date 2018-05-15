@@ -41,9 +41,7 @@ public partial class SEUResources{
                 {
                     Debug.LogWarning("[同步冲突] 已经处理");
                 }
-            }
-           
-            
+            }       
             if (bundle != null)
             {
                 AssetBundleRequest request = bundle.LoadAssetAsync("assetbundlemanifest");

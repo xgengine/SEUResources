@@ -21,6 +21,7 @@ public class SEUBundlePathConverter : IPathConverter
 
 public abstract class SEUBundleLoader
 {
+    SEUFileLoader m_FileLoader;
     protected AssetBundle m_Bundle;
     public AssetBundle assetBundle
     {

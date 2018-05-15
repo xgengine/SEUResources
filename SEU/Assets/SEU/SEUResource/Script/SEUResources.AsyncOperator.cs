@@ -2,6 +2,7 @@
 using System.Collections;
 /// <summary>
 /// 执行异步加载操作
+/// TODO 对异步请求可以进行数量、优先级的配置
 /// </summary>
 public class AsyncOperator : MonoBehaviour {
 

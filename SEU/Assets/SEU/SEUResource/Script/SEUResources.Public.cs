@@ -96,10 +96,14 @@ public partial class SEUResources{
 
     static public bool PreLoadBundle(string path)
     {
-        m_ResourcePool.LoadBundle(path);
-        return true;
+        SEUResources res = m_ResourcePool.LoadBundle(path);
+        if(res.asset != null)
+        {
+            return true;
+        }
+        return false;
     }
-
+   
     static public void Destory(Object asset)
     {
         if (asset != null)
