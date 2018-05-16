@@ -180,15 +180,96 @@ public partial class SEUResources
         return m_ResourcePool.LoadAsyn(path, type, callback);
     }
 
-    static private AsyncRequest LoadAsync(string path, System.Type type, System.Action<Object> callback = null)
-    {
-        AsyncRequest request = _LoadAsync(path, type,
-            (resource) => {
-                m_ObjectPool.GetObject(resource);
-            }
-        );
-        return request;
 
+
+    static private T Instantiate<T>(Object asset) where T : Object
+    {
+        T instance = null;
+        if (asset != null)
+        {
+            instance = Object.Instantiate<T>(asset as T);
+            m_ObjectPool.AttachAssetToInstance(asset, instance);
+        }
+        else
+        {
+            Debug.LogError("[SEUResources] Instantiate Object But The Object is NULL");
+        }
+        return instance;
+    }
+
+    static private Object Instantiate(Object asset)
+    {
+        Object obj = null;
+        if (asset != null)
+        {
+            obj = Object.Instantiate(asset);
+            m_ObjectPool.AttachAssetToInstance(asset, obj);
+        }
+        else
+        {
+            Debug.LogError("[SEUResources] Instantiate Object But The Object is NULL");
+        }
+        return obj;
+    }
+
+    static private Object Instantiate(Object asset, Vector3 postion, Quaternion rotation)
+    {
+        Object obj = null;
+        if (asset != null)
+        {
+            obj = Object.Instantiate(asset, postion, rotation);
+            m_ObjectPool.AttachAssetToInstance(asset, obj);
+        }
+        else
+        {
+            Debug.LogError("[SEUResources] Instantiate Object But The Object is NULL");
+        }
+        return obj;
+    }
+
+    static private Object Instantiate(Object asset, Vector3 postion, Quaternion rotation, Transform parent)
+    {
+        Object obj = null;
+        if (asset != null)
+        {
+            obj = Object.Instantiate(asset, postion, rotation, parent);
+            m_ObjectPool.AttachAssetToInstance(asset, obj);
+        }
+        else
+        {
+            Debug.LogError("[SEUResources] Instantiate Object But The Object is NULL");
+        }
+        return obj;
+    }
+
+    static private Object Instantiate(Object asset, Transform parent)
+    {
+        Object obj = null;
+        if (asset != null)
+        {
+            obj = Object.Instantiate(asset, parent);
+            m_ObjectPool.AttachAssetToInstance(asset, obj);
+        }
+        else
+        {
+            Debug.LogError("[SEUResources] Instantiate Object But The Object is NULL");
+        }
+        return obj;
+    }
+
+    static private Object Instantiate(Object asset, Transform parent, bool worldPositionStays)
+    {
+        Object obj = null;
+        if (asset != null)
+        {
+            obj = Object.Instantiate(asset, parent, worldPositionStays);
+            m_ObjectPool.AttachAssetToInstance(asset, obj);
+        }
+        else
+        {
+            Debug.LogError("[SEUResources] Instantiate Object But The Object is NULL");
+        }
+        return obj;
     }
 
     private static int ToResGUID(string path, System.Type type)
